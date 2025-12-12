@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Cửa Hàng OOP</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="container mt-5">
+    <h1 class="text-center mb-4">Quản Lý Sản Phẩm (VS Code)</h1>
+    
+    <div class="card p-4 mb-4 bg-light">
+        <form action="/add" method="post" class="row g-3">
+            <div class="col-md-6"><input type="text" name="name" class="form-control" placeholder="Tên SP" required></div>
+            <div class="col-md-4"><input type="number" name="price" class="form-control" placeholder="Giá" required></div>
+            <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Thêm</button></div>
+        </form>
+    </div>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark"><tr><th>ID</th><th>Tên</th><th>Giá</th></tr></thead>
+        <tbody>
+            <tr th:each="p : ${products}">
+                <td th:text="${p.id}"></td>
+                <td th:text="${p.name}"></td>
+                <td th:text="${p.price}"></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
