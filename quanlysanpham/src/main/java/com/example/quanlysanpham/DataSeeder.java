@@ -2,7 +2,7 @@ package com.example.quanlysanpham;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-
+import java.math.BigDecimal;
 import com.example.quanlysanpham.entity.Order;
 import com.example.quanlysanpham.entity.OrderItem;
 import com.example.quanlysanpham.entity.Product;
@@ -55,21 +55,21 @@ public class DataSeeder implements CommandLineRunner {
         OrderItem i1 = new OrderItem();
         i1.setProduct(p1);
         i1.setQuantity(2);
-        i1.setPriceAtOrder(p1.getPrice());
-        order.addItem(i1);
+        i1.setPriceAtOrder(BigDecimal.valueOf(p1.getPrice()));
+        order.addOrderItem(i1);
 
         OrderItem i2 = new OrderItem();
         i2.setProduct(p2);
         i2.setQuantity(1);
-        i2.setPriceAtOrder(p2.getPrice());
-        order.addItem(i2);
+        i2.setPriceAtOrder(BigDecimal.valueOf(p2.getPrice()));
+        order.addOrderItem(i2);
 
         // totalAmount đã được order.recalculateTotalAmount() gọi trong addItem
         order = orderRepository.save(order);
 
         System.out.println("Saved order id = " + order.getId()
                 + ", total = " + order.getTotalAmount()
-                + ", items = " + order.getItems().size());
+                + ", items = " + order.getOrderItems().size());
 
         System.out.println("Orders count = " + orderRepository.count());
     }

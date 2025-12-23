@@ -21,8 +21,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 
 //đại diện cho hóa đơn tổng
 @Entity
@@ -53,7 +54,7 @@ public class Order {
     private OrderStatus status = OrderStatus.PENDING;
 
     // tổng tiền (tính từ orderItems)
-    @Transient
+    @Column(name = "total_amount")
     private BigDecimal totalAmount;
     public Order(){}
 
@@ -115,13 +116,23 @@ public class Order {
     }
 
     // tính tổng tiền từ các orderItems
+    // --- SỬA 1: Tách hàm tính toán riêng (Void) ---
+    // Hàm này tự chạy TRƯỚC khi lưu vào DB
+    @PrePersist
+    @PreUpdate
+    public void calculateTotalAmount() {
+        if (orderItems == null || orderItems.isEmpty()) {
+            this.totalAmount = BigDecimal.ZERO;
+        } else {
+            this.totalAmount = orderItems.stream()
+                    .map(OrderItem::getLineTotal)
+                    .filter(val -> val != null) // Lọc null cho an toàn
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+   
+                }
+    }
     public BigDecimal getTotalAmount() {
-        if(orderItems == null || orderItems.isEmpty()){
-            return BigDecimal.ZERO;
-        }
-        return orderItems.stream()
-                .map(OrderItem::getLineTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return totalAmount;
     }
 
     public void setTotalAmount(BigDecimal totalAmount) {
