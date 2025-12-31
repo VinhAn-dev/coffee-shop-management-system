@@ -1,76 +1,67 @@
 package com.example.quanlysanpham;
 
+import java.util.List;
+
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-import java.math.BigDecimal;
-import com.example.quanlysanpham.entity.Order;
-import com.example.quanlysanpham.entity.OrderItem;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.quanlysanpham.entity.Product;
 import com.example.quanlysanpham.entity.User;
-import com.example.quanlysanpham.enums.OrderStatus;
-import com.example.quanlysanpham.repository.OrderRepository;
 import com.example.quanlysanpham.repository.ProductRepository;
 import com.example.quanlysanpham.repository.UserRepository;
 
 @Component
+@Profile("dev") // chỉ seed khi chạy môi trường dev (không seed ở prod)
 public class DataSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
-    private final OrderRepository orderRepository;
 
     public DataSeeder(UserRepository userRepository,
-                      ProductRepository productRepository,
-                      OrderRepository orderRepository) {
+                      ProductRepository productRepository) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
-        this.orderRepository = orderRepository;
     }
 
     @Override
+    @Transactional
     public void run(String... args) {
 
-        // 1) Test UserRepository
-        User admin = new User("admin", "123", "ADMIN", "Admin Demo");
-        admin = userRepository.save(admin);
-        System.out.println("Saved user id = " + admin.getId());
+        // ===== Seed user hệ thống =====
+        upsertUser("admin", "123", "ADMIN", "Admin Demo");
+        upsertUser("staff1", "123", "STAFF", "Staff Demo");
 
-        System.out.println("Find by username 'admin' = " +
-                userRepository.findByUsername("admin").isPresent());
+        // ===== Seed menu (product) =====
+        upsertProduct("Ca phe sua", 25000.0, true);
+        upsertProduct("Latte", 30000.0, true);
+    }
 
-        // 2) Test ProductRepository
-        Product p1 = productRepository.save(new Product("Ca phe sua", 25000.0, true));
-        Product p2 = productRepository.save(new Product("Latte", 30000.0, true));
-        System.out.println("Products count = " + productRepository.count());
+    private User upsertUser(String username, String password, String role, String fullName) {
+        return userRepository.findByUsername(username)
+                .map(existing -> {
+                    // nếu đã có thì cập nhật lại cho đúng cấu hình seed
+                    existing.setPassword(password);
+                    existing.setRole(role);
+                    existing.setFullName(fullName);
+                    return userRepository.save(existing);
+                })
+                .orElseGet(() -> userRepository.save(new User(username, password, role, fullName)));
+    }
 
-        System.out.println("Available products = " + productRepository.findByIsAvailableTrue().size());
-        System.out.println("Search 'lat' = " + productRepository.findByNameContainingIgnoreCase("lat").size());
+    private Product upsertProduct(String name, Double price, Boolean isAvailable) {
+        // repo của bạn đang có findByNameContainingIgnoreCase, nên seeder check theo equalsIgnoreCase
+        List<Product> candidates = productRepository.findByNameContainingIgnoreCase(name);
 
-        // 3) Test OrderRepository (quan hệ Order - OrderItem - Product - User)
-        Order order = new Order();
-        order.setCreatedBy(admin);
-        order.setStatus(OrderStatus.PENDING);
+        for (Product p : candidates) {
+            if (p.getName() != null && p.getName().equalsIgnoreCase(name)) {
+                p.setPrice(price);
+                p.setIsAvailable(isAvailable);
+                return productRepository.save(p);
+            }
+        }
 
-        // tạo 2 item (priceAtOrder lấy theo product hiện tại)
-        OrderItem i1 = new OrderItem();
-        i1.setProduct(p1);
-        i1.setQuantity(2);
-        i1.setPriceAtOrder(BigDecimal.valueOf(p1.getPrice()));
-        order.addOrderItem(i1);
-
-        OrderItem i2 = new OrderItem();
-        i2.setProduct(p2);
-        i2.setQuantity(1);
-        i2.setPriceAtOrder(BigDecimal.valueOf(p2.getPrice()));
-        order.addOrderItem(i2);
-
-        // totalAmount đã được order.recalculateTotalAmount() gọi trong addItem
-        order = orderRepository.save(order);
-
-        System.out.println("Saved order id = " + order.getId()
-                + ", total = " + order.getTotalAmount()
-                + ", items = " + order.getOrderItems().size());
-
-        System.out.println("Orders count = " + orderRepository.count());
+        return productRepository.save(new Product(name, price, isAvailable));
     }
 }
