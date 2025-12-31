@@ -1,5 +1,7 @@
 package com.example.quanlysanpham.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -25,7 +27,7 @@ public class OrderItem {
 
     // giá của món tại thời điểm tạo đơn (để sau này đổi giá thì đơn cũ vẫn đúng)
     @Column(nullable = false)
-    private Double priceAtOrder;
+    private BigDecimal priceAtOrder;
 
     // nhiều OrderItem thuộc về 1 Order
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -39,7 +41,7 @@ public class OrderItem {
 
     public OrderItem() {}
 
-    public OrderItem(Order order, Product product, Integer quantity, Double priceAtOrder) {
+    public OrderItem(Order order, Product product, Integer quantity, BigDecimal priceAtOrder) {
         this.order = order;
         this.product = product;
         this.quantity = quantity;
@@ -58,11 +60,11 @@ public class OrderItem {
         this.quantity = quantity;
     }
 
-    public Double getPriceAtOrder() {
+    public BigDecimal getPriceAtOrder() {
         return priceAtOrder;
     }
 
-    public void setPriceAtOrder(Double priceAtOrder) {
+    public void setPriceAtOrder(BigDecimal priceAtOrder) {
         this.priceAtOrder = priceAtOrder;
     }
 
@@ -82,10 +84,11 @@ public class OrderItem {
         this.product = product;
     }
 
-    // tiện để tính tiền từng dòng (không map DB)
+    //tính bill bằng cách lấy giá của sản phẩm * số lượng
+    //chuyển quantity từ int sang Bigdecimal để tính toán cho đúng
     @Transient
-    public Double getLineTotal() {
-        if (priceAtOrder == null || quantity == null) return 0.0;
-        return priceAtOrder * quantity;
+    public BigDecimal getLineTotal() {
+        if (priceAtOrder == null || quantity == null) return BigDecimal.ZERO;
+        return priceAtOrder.multiply(new BigDecimal(quantity));
     }
 }
