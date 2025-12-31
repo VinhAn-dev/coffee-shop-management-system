@@ -1,5 +1,7 @@
 package com.example.quanlysanpham.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,81 +29,90 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
-    public OrderService(OrderRepository orderRepository,
-                        ProductRepository productRepository,
-                        UserRepository userRepository) {
+    public OrderService(
+            OrderRepository orderRepository,
+            ProductRepository productRepository,
+            UserRepository userRepository
+    ) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
     }
 
-    /**
-     * staffId lấy từ token để biết ai tạo đơn.
-     * req.items là danh sách món + số lượng.
-     */
+    // Staff tạo order mới (createdBy = staff đang login)
     public OrderResponse createOrder(Long staffId, OrderRequest req) {
+        if (staffId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing token");
+        }
         if (req == null || req.getItems() == null || req.getItems().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order items is empty");
         }
 
-        // staff phải tồn tại
-        User staff = userRepository.findById(staffId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Staff not found"));
-
-        // chặn tài khoản không phải STAFF tạo đơn
-        if (staff.getRole() == null || !staff.getRole().equalsIgnoreCase("STAFF")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only STAFF can create order");
-        }
+        User staff = requireStaff(staffId);
 
         Order order = new Order();
         order.setCreatedBy(staff);
+
+        // orderDate trong entity là NOT NULL => bắt buộc set
+        order.setOrderDate(LocalDateTime.now());
+
+        // status mặc định PENDING rồi nhưng set rõ cho dễ đọc
         order.setStatus(OrderStatus.PENDING);
 
-        List<ItemDTO> items = req.getItems();
-        for (ItemDTO dto : items) {
+        for (ItemDTO dto : req.getItems()) {
             if (dto == null) continue;
 
-            Long productId = dto.getProductId(); // id món
-            Integer qty = dto.getQuantity();     // số lượng mua
+            Long productId = dto.getProductId();
+            Integer quantity = dto.getQuantity();
 
-            if (productId == null || qty == null || qty <= 0) {
+            if (productId == null || quantity == null || quantity <= 0) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid productId/quantity");
             }
 
-            Product p = productRepository.findById(productId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "Product not found: " + productId));
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: " + productId));
 
-            // món phải còn bán
-            if (p.getIsAvailable() == null || !p.getIsAvailable()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Product is not available: " + productId);
+            if (product.getIsAvailable() == null || !product.getIsAvailable()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product is not available: " + productId);
             }
 
-            OrderItem oi = new OrderItem();
-            oi.setProduct(p);
-            oi.setQuantity(qty);
-            oi.setPriceAtOrder(p.getPrice()); // chốt giá tại thời điểm mua
+            // Tạo OrderItem và gắn vào Order bằng hàm addOrderItem()
+            OrderItem item = new OrderItem();
+            item.setProduct(product);
+            item.setQuantity(quantity);
 
-            // addItem() tự set order + tự cộng tổng tiền
-            order.addItem(oi);
+            // Nếu product.getPrice() null thì coi như 0 để tránh crash
+            BigDecimal priceAtOrder = toBigDecimal(product.getPrice());
+            item.setPriceAtOrder(priceAtOrder);
+
+            // Quan hệ 2 chiều: addOrderItem sẽ setOrder(this)
+            order.addOrderItem(item);
         }
 
+        // PrePersist/PreUpdate trong Order sẽ tự calculateTotalAmount trước khi lưu
         Order saved = orderRepository.save(order);
 
-        return new OrderResponse(
-                saved.getId(),
-                saved.getCreatedDate(),
-                saved.getTotalAmount(),
-                saved.getStatus()
-        );
+        return toResponse(saved);
     }
 
-    /**
-     * Staff đổi trạng thái đơn.
-     * staff chỉ được sửa đơn do staff đó tạo.
-     */
+    // Staff xem đơn do mình tạo
+    public List<OrderResponse> getMyOrders(Long staffId) {
+        if (staffId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing token");
+        }
+
+        requireStaff(staffId);
+
+        return orderRepository.findByCreatedBy_Id(staffId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    // Staff đổi status đơn (chỉ được đổi đơn do mình tạo)
     public OrderResponse updateStatus(Long staffId, Long orderId, UpdateStatusRequest req) {
+        if (staffId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing token");
+        }
         if (orderId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing orderId");
         }
@@ -109,64 +120,61 @@ public class OrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing status");
         }
 
-        // staff phải tồn tại
-        User staff = userRepository.findById(staffId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Staff not found"));
-
-        if (staff.getRole() == null || !staff.getRole().equalsIgnoreCase("STAFF")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only STAFF can update status");
-        }
+        requireStaff(staffId);
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
-        // chặn sửa đơn người khác
+        // Chỉ cho đổi đơn do chính staff tạo
         if (order.getCreatedBy() == null || order.getCreatedBy().getId() == null
                 || !order.getCreatedBy().getId().equals(staffId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only update your own orders");
         }
 
-        OrderStatus newStatus = req.getStatus();
         OrderStatus current = order.getStatus();
+        OrderStatus next = req.getStatus();
 
-        // chặn chuyển trạng thái kiểu “tùm lum” (đơn giản cho MVP)
-        if (!isValidTransition(current, newStatus)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Invalid status transition: " + current + " -> " + newStatus);
+        if (!isValidTransition(current, next)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status transition: " + current + " -> " + next);
         }
 
-        order.setStatus(newStatus);
+        order.setStatus(next);
         Order saved = orderRepository.save(order);
 
+        return toResponse(saved);
+    }
+
+    // ===== helper =====
+
+    private User requireStaff(Long staffId) {
+        User staff = userRepository.findById(staffId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        if (staff.getRole() == null || !staff.getRole().equalsIgnoreCase("STAFF")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only STAFF allowed");
+        }
+        return staff;
+    }
+
+    private OrderResponse toResponse(Order order) {
         return new OrderResponse(
-                saved.getId(),
-                saved.getCreatedDate(),
-                saved.getTotalAmount(),
-                saved.getStatus()
+                order.getId(),
+                order.getOrderDate(),
+                order.getTotalAmount(),
+                order.getStatus()
         );
     }
 
-    /**
-     * Staff xem lịch sử đơn của chính mình.
-     */
-    public List<OrderResponse> getMyOrders(Long staffId) {
-        User staff = userRepository.findById(staffId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Staff not found"));
-
-        if (staff.getRole() == null || !staff.getRole().equalsIgnoreCase("STAFF")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only STAFF can view orders here");
-        }
-
-        return orderRepository.findByCreatedById(staffId).stream()
-                .map(o -> new OrderResponse(o.getId(), o.getCreatedDate(), o.getTotalAmount(), o.getStatus()))
-                .collect(Collectors.toList());
+    private BigDecimal toBigDecimal(Double value) {
+        if (value == null) return BigDecimal.ZERO;
+        return BigDecimal.valueOf(value);
     }
 
-    // check luồng trạng thái cơ bản
+    // Luồng trạng thái đơn cho staff (MVP)
     private boolean isValidTransition(OrderStatus current, OrderStatus next) {
         if (current == null) return true;
 
-        // đã COMPLETED/CANCELLED thì thôi
+        // Đã COMPLETED hoặc CANCELLED thì khóa
         if (current == OrderStatus.COMPLETED || current == OrderStatus.CANCELLED) return false;
 
         // PENDING -> PAID hoặc CANCELLED
@@ -180,9 +188,5 @@ public class OrderService {
         }
 
         return false;
-    }
-
-    public List<OrderResponse> getAllOrders(Long staffId) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
