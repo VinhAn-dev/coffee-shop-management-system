@@ -1,67 +1,42 @@
-package com.example.quanlysanpham;
+package com.example.quanlysanpham; // Nhớ kiểm tra package cho đúng với máy bạn
 
-import java.util.List;
+import java.math.BigDecimal;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.example.quanlysanpham.entity.Product;
-import com.example.quanlysanpham.entity.User;
 import com.example.quanlysanpham.repository.ProductRepository;
-import com.example.quanlysanpham.repository.UserRepository;
 
 @Component
-@Profile("dev") // chỉ seed khi chạy môi trường dev (không seed ở prod)
 public class DataSeeder implements CommandLineRunner {
 
-    private final UserRepository userRepository;
-    private final ProductRepository productRepository;
-
-    public DataSeeder(UserRepository userRepository,
-                      ProductRepository productRepository) {
-        this.userRepository = userRepository;
-        this.productRepository = productRepository;
-    }
+    @Autowired
+    private ProductRepository productRepository;
 
     @Override
-    @Transactional
-    public void run(String... args) {
+    public void run(String... args) throws Exception {
+        // Kiểm tra xem nếu chưa có dữ liệu thì mới thêm vào
+        if (productRepository.count() == 0) {
+            
+            // Tạo sản phẩm mẫu 1
+            Product p1 = new Product();
+            p1.setName("Cà phê Đen");
+            p1.setPrice(new BigDecimal("25000")); // Dùng BigDecimal cho giá tiền
+            p1.setDescription("Đậm đà hương vị truyền thống");
+            p1.setImageUrl("https://via.placeholder.com/150");
+            productRepository.save(p1);
 
-        // ===== Seed user hệ thống =====
-        upsertUser("admin", "123", "ADMIN", "Admin Demo");
-        upsertUser("staff1", "123", "STAFF", "Staff Demo");
+            // Tạo sản phẩm mẫu 2
+            Product p2 = new Product();
+            p2.setName("Bạc Xỉu");
+            p2.setPrice(new BigDecimal("28000"));
+            p2.setDescription("Ngọt ngào sữa đặc");
+            p2.setImageUrl("https://via.placeholder.com/150");
+            productRepository.save(p2);
 
-        // ===== Seed menu (product) =====
-        upsertProduct("Ca phe sua", 25000.0, true);
-        upsertProduct("Latte", 30000.0, true);
-    }
-
-    private User upsertUser(String username, String password, String role, String fullName) {
-        return userRepository.findByUsername(username)
-                .map(existing -> {
-                    // nếu đã có thì cập nhật lại cho đúng cấu hình seed
-                    existing.setPassword(password);
-                    existing.setRole(role);
-                    existing.setFullName(fullName);
-                    return userRepository.save(existing);
-                })
-                .orElseGet(() -> userRepository.save(new User(username, password, role, fullName)));
-    }
-
-    private Product upsertProduct(String name, Double price, Boolean isAvailable) {
-        // repo của bạn đang có findByNameContainingIgnoreCase, nên seeder check theo equalsIgnoreCase
-        List<Product> candidates = productRepository.findByNameContainingIgnoreCase(name);
-
-        for (Product p : candidates) {
-            if (p.getName() != null && p.getName().equalsIgnoreCase(name)) {
-                p.setPrice(price);
-                p.setIsAvailable(isAvailable);
-                return productRepository.save(p);
-            }
+            System.out.println("--- Đã nạp dữ liệu mẫu thành công! ---");
         }
-
-        return productRepository.save(new Product(name, price, isAvailable));
     }
 }
