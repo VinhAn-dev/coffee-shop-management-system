@@ -1,6 +1,7 @@
 package com.example.quanlysanpham.entity;
 
-import jakarta.persistence.Column;
+import java.math.BigDecimal;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,62 +11,37 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "products")
 public class Product {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // tên món
-    @Column(nullable = false)
     private String name;
+    private String description;
+    private BigDecimal price;
+    private String imageUrl;
+    
+    // Thêm lại cột này để khớp với code của nhóm
+    private boolean isAvailable = true; 
 
-    // giá bán
-    @Column(nullable = false)
-    private Double price;
+    public Product() {}
 
-    // còn bán / hết hàng
-    @Column(nullable = false)
-    private Boolean isAvailable = true;
+    // --- Getters và Setters ---
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Product() {
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public Product(String name, Double price, Boolean isAvailable) {
-        this.name = name;
-        this.price = price;
-        this.isAvailable = isAvailable;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    // ===== Getter/Setter =====
-    public Long getId() {
-        return id;
-    }
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
 
-    public String getName() {
-        return name;
-    }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
-    public Double getPrice() {
-        return price;
-    }
-
-    public Boolean getIsAvailable() {
-        return isAvailable;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setPrice(Double price) {
-        this.price = price;
-    }
-
-    public void setIsAvailable(Boolean available) {
-        isAvailable = available;
-    }
+    // Getter/Setter cho isAvailable
+    public boolean getIsAvailable() { return isAvailable; }
+    public void setIsAvailable(boolean isAvailable) { this.isAvailable = isAvailable; }
 }
