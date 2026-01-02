@@ -53,7 +53,7 @@ public class StaffOrderController {
     @GetMapping("/orders")
     public ResponseEntity<List<OrderResponse>> getAllOrders(HttpServletRequest request) {
         Long staffId = (Long) request.getAttribute("authUserId");
-        List<OrderResponse> res = orderService.getAllOrders(staffId);
+        List<OrderResponse> res = orderService.getMyOrders(staffId);
         return ResponseEntity.ok(res);
     }
 

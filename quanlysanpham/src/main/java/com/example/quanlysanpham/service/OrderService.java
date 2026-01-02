@@ -189,4 +189,8 @@ public class OrderService {
 
         return false;
     }
+
+    public List<OrderResponse> getAllOrders(Long staffId) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
