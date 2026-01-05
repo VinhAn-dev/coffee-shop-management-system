@@ -44,4 +44,9 @@ public class Product {
     // Getter/Setter cho isAvailable
     public boolean getIsAvailable() { return isAvailable; }
     public void setIsAvailable(boolean isAvailable) { this.isAvailable = isAvailable; }
+
+    public void setPrice(double d) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setPrice'");
+    }
 }

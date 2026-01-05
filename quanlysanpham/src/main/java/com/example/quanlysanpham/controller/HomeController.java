@@ -1,13 +1,15 @@
 package com.example.quanlysanpham.controller; // Đã thêm .service để đúng vị trí file
 
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+@Controller  // Lưu ý: Dùng @Controller, KHÔNG dùng @RestController
 public class HomeController {
 
+    // Khi người dùng vào trang chủ "/" (localhost:8080)
     @GetMapping("/")
     public String home() {
-        return "Xin chào! Tôi là thành viên mới, code đã chạy thành công!";
+        // Nó sẽ tự chuyển hướng sang "index.html"
+        return "redirect:/index.html";
     }
 }

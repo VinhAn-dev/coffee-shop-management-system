@@ -38,7 +38,7 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu username/password");
         }
 
-        Optional<User> opt = userRepository.findByUsername(username);
+        User opt = userRepository.findByUsername(username);
         if (opt.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai tài khoản hoặc mật khẩu");
         }

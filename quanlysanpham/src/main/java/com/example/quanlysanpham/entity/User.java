@@ -101,4 +101,12 @@ public class User {
     public void setOrders(List<Order> orders) {
         this.orders = orders;
     }
+
+    public boolean isEmpty() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public User get() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

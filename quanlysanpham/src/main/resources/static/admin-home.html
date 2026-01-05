@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Coffee Manager</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .dashboard-menu { display: flex; gap: 20px; justify-content: center; margin-top: 50px; }
+        .card {
+            background: white; width: 200px; padding: 30px; border-radius: 10px;
+            text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            cursor: pointer; transition: transform 0.3s; text-decoration: none; color: #333;
+        }
+        .card:hover { transform: translateY(-5px); border: 2px solid #007bff; }
+        .card i { font-size: 40px; color: #007bff; margin-bottom: 15px; }
+        .card h3 { margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="container" style="width: 800px; text-align: center;">
+        <h2>Xin chào, Quản Lý (Admin)</h2>
+        <p>Chọn chức năng để bắt đầu làm việc</p>
+
+        <div class="dashboard-menu">
+            <a href="products.html" class="card">
+                <i class="fa-solid fa-coffee"></i>
+                <h3>Quản lý Menu</h3>
+            </a>
+
+            <a href="history.html" class="card">
+                <i class="fa-solid fa-receipt"></i>
+                <h3>Lịch sử Đơn</h3>
+            </a>
+        </div>
+
+        <button onclick="logout()" style="width: 200px; margin-top: 50px; background-color: #6c757d;">
+            <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+        </button>
+    </div>
+
+    <script>
+        // Kiểm tra quyền Admin
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || user.role !== "ADMIN") {
+            window.location.href = "index.html";
+        }
+
+        function logout() {
+            localStorage.removeItem("user");
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
