@@ -1,59 +1,40 @@
 package com.example.quanlysanpham;
 
-import java.util.List;
-
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.example.quanlysanpham.entity.Product;
 import com.example.quanlysanpham.entity.User;
-import com.example.quanlysanpham.repository.ProductRepository;
 import com.example.quanlysanpham.repository.UserRepository;
+// import com.example.quanlysanpham.repository.ProductRepository; // Không dùng nữa thì bỏ import luôn cho sạch
 
 @Configuration
 public class DatabaseLoader {
 
-    // Chạy ngay khi Server khởi động
     @Bean
-    CommandLineRunner initDatabase(UserRepository userRepo, ProductRepository productRepo) {
+    // Bỏ productRepo khỏi tham số vì không dùng nữa
+    CommandLineRunner initDatabase(UserRepository userRepo) { 
         return args -> {
-            // 1. Tạo User ADMIN nếu chưa có
+            // 1. Giữ lại tạo User ADMIN (Để đăng nhập)
             if (userRepo.findByUsername("admin") == null) {
                 User admin = new User();
                 admin.setUsername("admin");
-                admin.setPassword("123"); // Lưu ý: thực tế nên mã hóa
+                admin.setPassword("123");
                 admin.setRole("ADMIN");
                 admin.setFullName("Quản Trị Viên");
                 userRepo.save(admin);
                 System.out.println(">>> Đã tạo user: admin / 123");
             }
 
-            // 2. Tạo User STAFF nếu chưa có
+            // 2. Giữ lại tạo User STAFF
             if (userRepo.findByUsername("staff") == null) {
                 User staff = new User();
                 staff.setUsername("staff");
                 staff.setPassword("123");
                 staff.setRole("STAFF");
-                staff.setFullName("Nhân Viên A");
+                staff.setFullName("Nhân Viên Bán Hàng");
                 userRepo.save(staff);
                 System.out.println(">>> Đã tạo user: staff / 123");
-            }
-
-            // 3. Tạo vài món mẫu nếu menu trống
-            if (productRepo.count() == 0) {
-                Product p1 = new Product();
-                p1.setName("Cà phê Đen");
-                p1.setPrice(15000.0);
-                p1.setIsAvailable(true);
-
-                Product p2 = new Product();
-                p2.setName("Cà phê Sữa");
-                p2.setPrice(18000.0);
-                p2.setIsAvailable(true);
-
-                productRepo.saveAll(List.of(p1, p2));
-                System.out.println(">>> Đã tạo dữ liệu menu mẫu");
             }
         };
     }

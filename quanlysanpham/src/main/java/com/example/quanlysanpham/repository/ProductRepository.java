@@ -1,5 +1,6 @@
 package com.example.quanlysanpham.repository;
 
+import java.math.BigDecimal; // <--- Nhớ import cái này
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,19 +15,21 @@ import com.example.quanlysanpham.entity.Product;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    // Lấy các món đang bán
+    // 1. Chỉ lấy các món đang bán (isAvailable = true)
+    // (Dùng để hiển thị menu cho khách, tránh hiện món đã ẩn)
     List<Product> findByIsAvailableTrue();
 
-    // Tìm theo tên (gõ gần đúng)
+    // 2. Tìm theo tên (gõ gần đúng, không phân biệt hoa thường)
     List<Product> findByNameContainingIgnoreCase(String keyword);
 
-    // Update giá (để đúng với controller updatePrice trong sơ đồ)
+    // 3. Update giá
+    // ⚠️ QUAN TRỌNG: Đã đổi Double thành BigDecimal để khớp với Entity
     @Modifying
     @Transactional
     @Query("update Product p set p.price = :newPrice where p.id = :id")
-    int updatePrice(@Param("id") Long id, @Param("newPrice") Double newPrice);
+    int updatePrice(@Param("id") Long id, @Param("newPrice") BigDecimal newPrice);
 
-    // “Xóa mềm”: chuyển isAvailable = false (thay vì delete thật)
+    // 4. "Xóa mềm": chuyển isAvailable = false (Ẩn món đi chứ không xóa mất)
     @Modifying
     @Transactional
     @Query("update Product p set p.isAvailable = false where p.id = :id")

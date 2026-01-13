@@ -17,13 +17,21 @@ public class Product {
 
     private String name;
     private String description;
-    private BigDecimal price;
+    private BigDecimal price; // Dùng BigDecimal để tính tiền cho chính xác
     private String imageUrl;
     
-    // Thêm lại cột này để khớp với code của nhóm
     private boolean isAvailable = true; 
 
     public Product() {}
+
+    // Constructor tiện lợi để tạo nhanh object (Dùng trong DatabaseLoader)
+    public Product(String name, String description, BigDecimal price, String imageUrl) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.imageUrl = imageUrl;
+        this.isAvailable = true;
+    }
 
     // --- Getters và Setters ---
     public Long getId() { return id; }
@@ -38,15 +46,15 @@ public class Product {
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
 
+    //HÀM NÀY QUAN TRỌNG: Giúp mày nhập số double (vd: 25000.0) nó tự đổi sang BigDecimal
+    public void setPrice(double d) {
+        this.price = BigDecimal.valueOf(d);
+    }
+
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
-    // Getter/Setter cho isAvailable
-    public boolean getIsAvailable() { return isAvailable; }
-    public void setIsAvailable(boolean isAvailable) { this.isAvailable = isAvailable; }
-
-    public void setPrice(double d) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setPrice'");
-    }
+    // Sửa lại tên hàm này cho đúng chuẩn Java (isAvailable)
+    public boolean isAvailable() { return isAvailable; }
+    public void setAvailable(boolean isAvailable) { this.isAvailable = isAvailable; }
 }

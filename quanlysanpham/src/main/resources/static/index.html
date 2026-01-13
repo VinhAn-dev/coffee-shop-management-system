@@ -1,4 +1,3 @@
-<!--trang dang nhap-->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -28,85 +27,80 @@
 
         <button onclick="login()">ĐĂNG NHẬP</button>
         
-        <div id="message" style="color: red;"></div>
+        <div id="message" style="color: red; margin-top: 10px; font-weight: bold;"></div>
     </div>
 
     <script>
-        // 1. Hàm xử lý bật/tắt hiển thị mật khẩu
+        // 1. Hàm bật/tắt hiển thị mật khẩu
         function togglePassword() {
             const passwordInput = document.getElementById("password");
             const eyeIcon = document.getElementById("eyeIcon");
 
             if (passwordInput.type === "password") {
-                passwordInput.type = "text"; // Hiện mật khẩu
+                passwordInput.type = "text";
                 eyeIcon.classList.remove("fa-eye");
-                eyeIcon.classList.add("fa-eye-slash"); // Đổi icon thành mắt gạch chéo
+                eyeIcon.classList.add("fa-eye-slash");
             } else {
-                passwordInput.type = "password"; // Ẩn mật khẩu (dấu *)
+                passwordInput.type = "password";
                 eyeIcon.classList.remove("fa-eye-slash");
-                eyeIcon.classList.add("fa-eye"); // Đổi lại icon mắt thường
+                eyeIcon.classList.add("fa-eye");
             }
         }
 
-        // 2. Hàm xử lý Đăng nhập gọi xuống Server
+        // 2. Hàm Đăng nhập (Đã sửa lỗi)
         async function login() {
-            let user = document.getElementById("username").value;
-            let pass = document.getElementById("password").value;
+            // Lấy giá trị từ ô nhập
+            let u = document.getElementById("username").value;
+            let p = document.getElementById("password").value;
             let msg = document.getElementById("message");
 
+            // Reset thông báo
             msg.innerText = "Đang xử lý...";
             msg.style.color = "blue";
 
             try {
-                // Gọi API Login (Cổng 8082 như mày vừa sửa)
-                let response = await fetch('http://localhost:8080/api/auth/login', {
+                // Gọi API Login
+                let response = await fetch('http://localhost:8080/api/auth/staff/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user, password: pass })
+                    // 👇 ĐÃ SỬA CHỖ NÀY: username lấy giá trị của biến u, password lấy của p
+                    body: JSON.stringify({ 
+                        username: u, 
+                        password: p 
+                    })
                 });
 
                 if (response.ok) {
-                    // Vì backend trả về text hoặc JSON rỗng nếu login sai, 
-                    // cần kiểm tra kỹ body response
-                    let userData = await response.text(); 
+                    // Đăng nhập thành công -> Lấy dữ liệu user trả về
+                    let data = await response.json();
                     
-                    if (userData) {
-                        // Parse lại thành JSON
-                        let data = JSON.parse(userData);
-                        
-                        msg.style.color = "green";
-                        msg.innerText = "Đăng nhập thành công!";
-                        
-                        // Lưu thông tin user vào trình duyệt để dùng cho trang sau
-                        localStorage.setItem("user", JSON.stringify(data));
+                    msg.style.color = "green";
+                    msg.innerText = "Đăng nhập thành công!";
+                    
+                    // Lưu vào localStorage
+                    localStorage.setItem("user", JSON.stringify(data));
 
-                        // Chờ 1 giây rồi chuyển trang
-                        setTimeout(() => {
-                            // Logic chuyển trang dựa theo quyền
-                            if(data.role === "ADMIN") {
-                                window.location.href = "products.html"; // Admin vào trang quản lý
-                            } else {
-                                window.location.href = "order.html";    // Staff vào trang bán hàng
-                            }
-                        }, 1000);
+                    // Chờ 1 xíu rồi chuyển trang
+                    setTimeout(() => {
+                        if(data.role === "ADMIN") {
+                            window.location.href = "admin-home.html"; // Vào trang Dashboard Admin
+                        } else {
+                            window.location.href = "products.html"; // Hoặc trang bán hàng cho Staff
+                        }
+                    }, 500);
 
-                    } else {
-                        msg.style.color = "red";
-                        msg.innerText = "Sai tên đăng nhập hoặc mật khẩu!";
-                    }
                 } else {
+                    // Đăng nhập thất bại
+                    let text = await response.text();
                     msg.style.color = "red";
-                    msg.innerText = "Lỗi xác thực (Kiểm tra lại server)!";
+                    msg.innerText = "Lỗi: " + text; // In ra lý do lỗi (vd: Sai mật khẩu)
                 }
             } catch (error) {
                 console.error(error);
                 msg.style.color = "red";
-                msg.innerText = "Không thể kết nối tới Server (Đảm bảo Server đang chạy)!";
+                msg.innerText = "Không thể kết nối Server (Kiểm tra xem Server bật chưa?)";
             }
         }
-        if(data.role === "ADMIN") {
-    window.location.href = "admin-home.html"; // <-- Chuyển vào trang Dashboard mới
-}
     </script>
 </body>
 </html>

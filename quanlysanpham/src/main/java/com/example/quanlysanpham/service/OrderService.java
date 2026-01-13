@@ -1,21 +1,27 @@
 package com.example.quanlysanpham.service;
 
-import org.springframework.stereotype.Service; // Quan trọng: Thêm dòng này
-import com.example.quanlysanpham.dto.OrderRequest;
-import com.example.quanlysanpham.entity.Order;
 import java.util.List;
 
-@Service // Quan trọng: Đánh dấu class này là một Service
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.example.quanlysanpham.entity.Order;
+import com.example.quanlysanpham.repository.OrderRepository;
+
+@Service // Bắt buộc có để Controller ở trên gọi được
 public class OrderService {
-    
-    // Bạn cần triển khai các hàm này để Controller có thể gọi được
-    public Order createOrder(OrderRequest request) {
-        // Code xử lý tạo đơn hàng ở đây
-        return new Order(); 
+
+    @Autowired
+    private OrderRepository orderRepo;
+
+    // Hàm này dùng để: LƯU ĐƠN HÀNG VÀO DATABASE
+    public Order saveOrder(Order order) {
+        // (Sau này có thể viết thêm code tính tổng tiền, trừ tồn kho... ở đây)
+        return orderRepo.save(order);
     }
 
+    // Hàm này dùng để: LẤY HẾT DỮ LIỆU TỪ BẢNG ORDERS RA
     public List<Order> getAllOrders() {
-        // Code lấy danh sách đơn hàng ở đây
-        return List.of();
+        return orderRepo.findAll();
     }
 }

@@ -16,7 +16,7 @@ public class ProductService {
 
     // Hàm lấy tất cả sản phẩm (Controller đang tìm cái này)
     public List<Product> getAllProducts() {
-        return productRepository.findAll();
+        return productRepository.findByIsAvailableTrue();
     }
 
     // Hàm lưu sản phẩm (Controller đang tìm cái này)
@@ -31,6 +31,6 @@ public class ProductService {
 
     // Hàm xóa sản phẩm
     public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
+        productRepository.softDelete(id);
     }
 }
