@@ -84,8 +84,10 @@
                     setTimeout(() => {
                         if(data.role === "ADMIN") {
                             window.location.href = "admin-home.html"; // Vào trang Dashboard Admin
-                        } else {
-                            window.location.href = "products.html"; // Hoặc trang bán hàng cho Staff
+                        } else if(data.role == "STAFF") {
+                            window.location.href = "order.html"; // trang bán hàng cho Staff
+                        }else{
+                            alert("Tài khoản này chưa được cấp quyền!");
                         }
                     }, 500);
 
