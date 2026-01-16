@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Coffee Hub</title>
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>Coffee Manager</h2>
+        
+        <div class="input-group">
+            <label for="username">Tên đăng nhập</label>
+            <input type="text" id="username" placeholder="Nhập username (vd: admin)">
+        </div>
+
+        <div class="input-group">
+            <label for="password">Mật khẩu</label>
+            <div class="password-wrapper">
+                <input type="password" id="password" placeholder="Nhập mật khẩu">
+                <i class="fa-solid fa-eye toggle-password" id="eyeIcon" onclick="togglePassword()"></i>
+            </div>
+        </div>
+
+        <button onclick="login()">ĐĂNG NHẬP</button>
+        
+        <div id="message" style="color: red; margin-top: 10px; font-weight: bold;"></div>
+    </div>
+
+    <script>
+        // 1. Hàm bật/tắt hiển thị mật khẩu
+        function togglePassword() {
+            const passwordInput = document.getElementById("password");
+            const eyeIcon = document.getElementById("eyeIcon");
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                eyeIcon.classList.remove("fa-eye");
+                eyeIcon.classList.add("fa-eye-slash");
+            } else {
+                passwordInput.type = "password";
+                eyeIcon.classList.remove("fa-eye-slash");
+                eyeIcon.classList.add("fa-eye");
+            }
+        }
+
+        // 2. Hàm Đăng nhập (Đã sửa lỗi)
+        async function login() {
+            // Lấy giá trị từ ô nhập
+            let u = document.getElementById("username").value;
+            let p = document.getElementById("password").value;
+            let msg = document.getElementById("message");
+
+            // Reset thông báo
+            msg.innerText = "Đang xử lý...";
+            msg.style.color = "blue";
+
+            try {
+                // Gọi API Login
+                let response = await fetch('http://localhost:8080/api/auth/staff/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    // 👇 ĐÃ SỬA CHỖ NÀY: username lấy giá trị của biến u, password lấy của p
+                    body: JSON.stringify({ 
+                        username: u, 
+                        password: p 
+                    })
+                });
+
+                if (response.ok) {
+                    // Đăng nhập thành công -> Lấy dữ liệu user trả về
+                    let data = await response.json();
+                    
+                    msg.style.color = "green";
+                    msg.innerText = "Đăng nhập thành công!";
+                    
+                    // Lưu vào localStorage
+                    localStorage.setItem("user", JSON.stringify(data));
+
+                    // Chờ 1 xíu rồi chuyển trang
+                    setTimeout(() => {
+                        if(data.role === "ADMIN") {
+                            window.location.href = "admin-home.html"; // Vào trang Dashboard Admin
+                        } else if(data.role == "STAFF") {
+                            window.location.href = "order.html"; // trang bán hàng cho Staff
+                        }else{
+                            alert("Tài khoản này chưa được cấp quyền!");
+                        }
+                    }, 500);
+
+                } else {
+                    // Đăng nhập thất bại
+                    let text = await response.text();
+                    msg.style.color = "red";
+                    msg.innerText = "Lỗi: " + text; // In ra lý do lỗi (vd: Sai mật khẩu)
+                }
+            } catch (error) {
+                console.error(error);
+                msg.style.color = "red";
+                msg.innerText = "Không thể kết nối Server (Kiểm tra xem Server bật chưa?)";
+            }
+        }
+    </script>
+</body>
+</html>
