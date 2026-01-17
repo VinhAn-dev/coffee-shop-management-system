@@ -3,34 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <title>Bán hàng - Coffee Hub</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .order-container { display: flex; gap: 20px; padding: 20px; }
-        .menu-section { flex: 2; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .cart-section { flex: 1; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .product-card { border: 1px solid #ddd; padding: 10px; text-align: center; cursor: pointer; border-radius: 5px; }
-        .product-card:hover { border-color: #007bff; background: #f0f7ff; }
-        .cart-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px thin #eee; }
-        .edit-mode-notice { background: #fff3cd; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ffeeba; }
+        :root { --primary: #6F4E37; --secondary: #A67B5B; --bg: #f8f9fa; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        .header { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .main-layout { display: flex; flex: 1; overflow: hidden; gap: 20px; padding: 20px; }
+        
+        /* Danh sách món */
+        .menu-container { flex: 2; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; align-content: start; }
+        .product-card { 
+            background: white; padding: 20px; border-radius: 15px; text-align: center; cursor: pointer; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s; border: 1px solid transparent;
+        }
+        .product-card:hover { border-color: var(--secondary); transform: translateY(-3px); }
+        .product-card i { font-size: 30px; color: var(--secondary); margin-bottom: 10px; }
+        .price { color: var(--primary); font-weight: bold; }
+
+        /* Giỏ hàng */
+        .cart-panel { flex: 1; background: white; border-radius: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 25px; }
+        .cart-items { flex: 1; overflow-y: auto; }
+        .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .total-section { border-top: 2px solid var(--bg); padding-top: 20px; margin-top: 20px; }
+        .btn-pay { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="container" style="width: 1000px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>☕ Coffee Hub - Bán Hàng</h2>
-            <button onclick="logout()" style="width: auto; background: #6c757d;">Đăng xuất</button>
-        </div>
+    <div class="header">
+        <h2 style="margin:0"><i class="fa-solid fa-mug-hot"></i> COFFEE HUB - Quầy Thu Ngân</h2>
+        <button onclick="logout()" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:8px 15px; border-radius:8px; cursor:pointer;">Đăng xuất</button>
+    </div>
 
-        <div class="order-container">
-            <div class="menu-section" id="menuList"></div>
+    <div class="main-layout">
+        <div class="menu-container" id="menuList"></div>
 
-            <div class="cart-section">
-                <div id="editNotice"></div> <h3>Giỏ hàng</h3>
-                <div id="cartItems"></div>
-                <hr>
-                <h4>Tổng: <span id="totalPrice" style="color: red;">0</span> đ</h4>
-                <button id="btnCheckout" onclick="checkout()" style="width: 100%; background: #28a745;">THANH TOÁN</button>
-                <button id="btnCancelEdit" onclick="cancelEdit()" style="width: 100%; background: #6c757d; margin-top: 5px; display: none;">HỦY CHỈNH SỬA</button>
+        <div class="cart-panel">
+            <h3 style="border-bottom: 2px solid var(--bg); padding-bottom: 15px;"><i class="fa-solid fa-cart-shopping"></i> Chi tiết đơn hàng</h3>
+            <div id="cartItems" class="cart-items"></div>
+            
+            <div class="total-section">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:20px; font-weight:bold;">
+                    <span>TỔNG CỘNG:</span>
+                    <span id="totalPrice" style="color:#e74c3c;">0 đ</span>
+                </div>
+                <button class="btn-pay" onclick="checkout()">XÁC NHẬN THANH TOÁN</button>
             </div>
         </div>
     </div>
@@ -40,64 +56,17 @@
         if (!user) window.location.href = "index.html";
 
         let cart = [];
-        let editingOrderId = null; // Quản lý ID đơn hàng đang sửa
 
-        // --- Chức năng chỉnh sửa đơn hàng ---
-        async function loadOrderToEdit(orderId) {
-            try {
-                let res = await fetch(`http://localhost:8080/api/orders/${orderId}`);
-                let order = await res.json();
-
-                // Chỉ cho phép sửa khi chưa thanh toán (PENDING)
-                if (order.status !== 'PENDING') {
-                    alert("Chỉ có thể sửa đơn hàng ở trạng thái CHỜ (PENDING)!");
-                    return;
-                }
-
-                editingOrderId = orderId;
-                // Chuyển dữ liệu từ đơn hàng vào giỏ hàng
-                cart = order.items.map(item => ({
-                    productId: item.productId, // Đảm bảo khớp với cấu trúc entity của bạn
-                    name: item.name,
-                    price: item.price,
-                    quantity: item.quantity
-                }));
-                
-                renderCart();
-                updateUIForEdit(orderId);
-            } catch (e) {
-                alert("Lỗi khi tải đơn hàng: " + e.message);
-            }
-        }
-
-        function updateUIForEdit(orderId) {
-            document.getElementById("editNotice").innerHTML = `<div class="edit-mode-notice">⚠️ Đang sửa đơn hàng #${orderId}</div>`;
-            document.getElementById("btnCheckout").innerText = "CẬP NHẬT ĐƠN HÀNG";
-            document.getElementById("btnCheckout").style.background = "#007bff";
-            document.getElementById("btnCancelEdit").style.display = "block";
-        }
-
-        function cancelEdit() {
-            editingOrderId = null;
-            cart = [];
-            document.getElementById("editNotice").innerHTML = "";
-            document.getElementById("btnCheckout").innerText = "THANH TOÁN";
-            document.getElementById("btnCheckout").style.background = "#28a745";
-            document.getElementById("btnCancelEdit").style.display = "none";
-            renderCart();
-        }
-
-        // --- Chức năng bán hàng cơ bản ---
         async function loadMenu() {
             let res = await fetch('http://localhost:8080/api/products');
-            let products = await res.json();
-            let html = products.map(p => `
+            let data = await res.json();
+            document.getElementById("menuList").innerHTML = data.map(p => `
                 <div class="product-card" onclick="addToCart(${p.id}, '${p.name}', ${p.price})">
-                    <strong>${p.name}</strong><br>
-                    <span style="color: #e67e22;">${p.price.toLocaleString()} đ</span>
+                    <i class="fa-solid fa-mug-saucer"></i>
+                    <div style="font-weight:bold; margin-bottom:5px;">${p.name}</div>
+                    <div class="price">${p.price.toLocaleString()} đ</div>
                 </div>
             `).join('');
-            document.getElementById("menuList").innerHTML = html;
         }
 
         function addToCart(id, name, price) {
@@ -108,55 +77,28 @@
         }
 
         function renderCart() {
-            let html = cart.map((i, index) => `
+            document.getElementById("cartItems").innerHTML = cart.map((i, index) => `
                 <div class="cart-item">
-                    <span>${i.name} x ${i.quantity}</span>
-                    <span>${(i.price * i.quantity).toLocaleString()} đ 
-                        <button onclick="removeFromCart(${index})" style="background:none; color:red; border:none; cursor:pointer; padding:0 5px;">✕</button>
-                    </span>
+                    <span>${i.name} <strong>x${i.quantity}</strong></span>
+                    <span>${(i.price * i.quantity).toLocaleString()} đ <i class="fa-solid fa-circle-xmark" style="color:#ddd; cursor:pointer; margin-left:8px;" onclick="removeFromCart(${index})"></i></span>
                 </div>
             `).join('');
-            document.getElementById("cartItems").innerHTML = html;
             let total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-            document.getElementById("totalPrice").innerText = total.toLocaleString();
+            document.getElementById("totalPrice").innerText = total.toLocaleString() + " đ";
         }
 
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            renderCart();
-        }
+        function removeFromCart(index) { cart.splice(index, 1); renderCart(); }
 
-        // --- Chức năng Thanh toán / Cập nhật ---
         async function checkout() {
-            if(cart.length === 0) return alert("Giỏ hàng trống!");
-            
-            // Nếu có ID thì dùng PUT để cập nhật, ngược lại dùng POST để tạo mới
-            const url = editingOrderId 
-                ? `http://localhost:8080/api/orders/${editingOrderId}` 
-                : 'http://localhost:8080/api/orders';
-            
-            const method = editingOrderId ? 'PUT' : 'POST';
-
-            let response = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
+            if(cart.length === 0) return alert("Giỏ hàng đang trống!");
+            let res = await fetch('http://localhost:8080/api/orders', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: user.id, items: cart })
             });
-
-            if(response.ok) {
-                alert(editingOrderId ? "Cập nhật đơn hàng thành công!" : "Thanh toán thành công!");
-                cancelEdit(); // Reset về trạng thái mặc định
-            } else {
-                let errMsg = await response.text();
-                alert("Thao tác thất bại: " + errMsg);
-            }
+            if(res.ok) { alert("🎉 Thanh toán thành công!"); cart = []; renderCart(); }
         }
 
-        function logout() {
-            localStorage.removeItem("user");
-            window.location.href = "index.html";
-        }
-
+        function logout() { localStorage.removeItem("user"); window.location.href = "index.html"; }
         loadMenu();
     </script>
 </body>

@@ -1,118 +1,86 @@
-<!--trang quan ly mon-->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Quản lý Món - Coffee Manager</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Danh mục sản phẩm - Coffee Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .container { width: 800px; max-width: 90%; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #f8f9fa; }
-        .btn-delete { background-color: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; cursor: pointer;}
-        .form-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { margin: 0; }
+        :root { --primary: #6F4E37; --secondary: #A67B5B; --bg: #fdfaf7; --text: #3d2b1f; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        .container { max-width: 900px; margin: 40px auto; padding: 30px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg); padding-bottom: 20px; margin-bottom: 30px; }
+        .form-group { display: flex; gap: 15px; margin-bottom: 30px; background: var(--bg); padding: 20px; border-radius: 12px; }
+        input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; flex: 1; outline: none; }
+        input:focus { border-color: var(--primary); }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 15px; background: var(--primary); color: white; }
+        td { padding: 15px; border-bottom: 1px solid #eee; }
+        .btn-delete { color: #e74c3c; cursor: pointer; background: none; border: none; font-size: 18px; }
+        .back-link { display: inline-block; margin-top: 20px; text-decoration: none; color: var(--secondary); font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>Quản lý Thực Đơn</h2>
-            <button onclick="logout()" style="width: auto; background: #6c757d;">Đăng xuất</button>
+        <div class="header">
+            <h2><i class="fa-solid fa-list-check"></i> Quản lý Thực Đơn</h2>
+            <button onclick="logout()" style="background:#6c757d; border:none; color:white; padding:8px 15px; border-radius:5px; cursor:pointer;">Đăng xuất</button>
         </div>
-
         <div class="form-group">
-            <input type="text" id="pName" placeholder="Tên món (vd: Cafe Sữa)" style="flex: 2;">
-            <input type="number" id="pPrice" placeholder="Giá (vd: 25000)" style="flex: 1;">
-            <button onclick="addProduct()" style="width: auto;">Thêm Món</button>
+            <input type="text" id="pName" placeholder="Tên sản phẩm (VD: Latte đá)">
+            <input type="number" id="pPrice" placeholder="Giá bán (VNĐ)">
+            <button class="btn-add" onclick="addProduct()">THÊM MÓN</button>
         </div>
-
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Tên Món</th>
-                    <th>Giá</th>
-                    <th>Hành động</th>
+                    <th>Sản phẩm</th>
+                    <th>Giá bán</th>
+                    <th style="text-align:center">Thao tác</th>
                 </tr>
             </thead>
-            <tbody id="productTableBody">
-                </tbody>
+            <tbody id="productTable"></tbody>
         </table>
+        <a href="admin-home.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Quay lại Dashboard</a>
     </div>
 
     <script>
-        // 1. Kiểm tra đăng nhập (Bảo mật cơ bản)
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (!user || user.role !== "ADMIN") {
-            alert("Bạn không có quyền truy cập!");
-            window.location.href = "index.html";
-        }
-
-        // 2. Load danh sách món khi mở trang
         async function loadProducts() {
-            try {
-                let res = await fetch('http://localhost:8080/api/products'); // Cổng 8080
-                let products = await res.json();
-                
-                let html = '';
-                products.forEach(p => {
-                    html += `
-                        <tr>
-                            <td>${p.id}</td>
-                            <td>${p.name}</td>
-                            <td>${p.price.toLocaleString()} đ</td>
-                            <td>
-                                <button class="btn-delete" onclick="deleteProduct(${p.id})">Xóa</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                document.getElementById("productTableBody").innerHTML = html;
-            } catch (e) { console.error(e); }
+            let res = await fetch('http://localhost:8080/api/products');
+            let data = await res.json();
+            let html = data.map(p => `
+                <tr>
+                    <td><strong>${p.name}</strong></td>
+                    <td>${p.price.toLocaleString()} đ</td>
+                    <td style="text-align:center">
+                        <button class="btn-delete" onclick="deleteProduct(${p.id})"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById("productTable").innerHTML = html;
         }
 
-        // 3. Hàm thêm món
         async function addProduct() {
-            let name = document.getElementById("pName").value;
-            let price = document.getElementById("pPrice").value;
-
-            if(!name || !price) return alert("Vui lòng nhập đủ thông tin!");
-
+            let n = document.getElementById("pName").value;
+            let p = document.getElementById("pPrice").value;
+            if(!n || !p) return alert("Vui lòng điền đủ thông tin!");
             await fetch('http://localhost:8080/api/products', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: name, price: parseFloat(price) })
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: n, price: parseFloat(p) })
             });
-
-            // Xóa form và load lại bảng
-            document.getElementById("pName").value = "";
-            document.getElementById("pPrice").value = "";
+            document.getElementById("pName").value = ""; document.getElementById("pPrice").value = "";
             loadProducts();
         }
 
-        // 4. Hàm xóa món
         async function deleteProduct(id) {
-            if(confirm("Bạn chắc chắn muốn xóa món này?")) {
+            if(confirm("Xác nhận xóa món này?")) {
                 await fetch('http://localhost:8080/api/products/' + id, { method: 'DELETE' });
                 loadProducts();
             }
         }
 
-        // 5. Hàm đăng xuất
-        function logout() {
-            localStorage.removeItem("user");
-            window.location.href = "index.html";
-        }
-
-        // Chạy hàm load khi trang vừa mở
+        function logout() { localStorage.removeItem("user"); window.location.href = "index.html"; }
         loadProducts();
     </script>
-    <div class="container">
-    <a href="admin-home.html" style="text-decoration: none; color: #007bff; font-weight: bold; display: block; margin-bottom: 10px;">← Quay lại Dashboard</a>
-    
-    <div style="display: flex;">
 </body>
-
 </html>
