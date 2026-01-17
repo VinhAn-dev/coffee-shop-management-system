@@ -34,4 +34,23 @@ public class OrderController {
         List<Order> orders = orderService.getAllOrders();
         return ResponseEntity.ok(orders);
     }
+
+
+    
+    // Hàm này dùng để: CHỈNH SỬA ĐƠN HÀNG (KHI TRẠNG THÁI LÀ PENDING)
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody Order updatedOrder) {
+        try {
+            Order result = orderService.updateOrder(id, updatedOrder);
+            if (result != null) {
+                return ResponseEntity.ok(result);
+            } else {
+                return ResponseEntity.badRequest().body("Không thể chỉnh sửa đơn hàng đã hoàn thành hoặc không tồn tại.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Lỗi khi chỉnh sửa: " + e.getMessage());
+        }
+    }
+
+    
 }

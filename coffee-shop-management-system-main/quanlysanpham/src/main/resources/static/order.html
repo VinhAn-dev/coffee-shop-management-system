@@ -11,6 +11,7 @@
         .product-card { border: 1px solid #ddd; padding: 10px; text-align: center; cursor: pointer; border-radius: 5px; }
         .product-card:hover { border-color: #007bff; background: #f0f7ff; }
         .cart-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px thin #eee; }
+        .edit-mode-notice { background: #fff3cd; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ffeeba; }
     </style>
 </head>
 <body>
@@ -21,15 +22,15 @@
         </div>
 
         <div class="order-container">
-            <div class="menu-section" id="menuList">
-                </div>
+            <div class="menu-section" id="menuList"></div>
 
             <div class="cart-section">
-                <h3>Giỏ hàng</h3>
+                <div id="editNotice"></div> <h3>Giỏ hàng</h3>
                 <div id="cartItems"></div>
                 <hr>
                 <h4>Tổng: <span id="totalPrice" style="color: red;">0</span> đ</h4>
-                <button onclick="checkout()" style="width: 100%; background: #28a745;">THANH TOÁN</button>
+                <button id="btnCheckout" onclick="checkout()" style="width: 100%; background: #28a745;">THANH TOÁN</button>
+                <button id="btnCancelEdit" onclick="cancelEdit()" style="width: 100%; background: #6c757d; margin-top: 5px; display: none;">HỦY CHỈNH SỬA</button>
             </div>
         </div>
     </div>
@@ -39,7 +40,54 @@
         if (!user) window.location.href = "index.html";
 
         let cart = [];
+        let editingOrderId = null; // Quản lý ID đơn hàng đang sửa
 
+        // --- Chức năng chỉnh sửa đơn hàng ---
+        async function loadOrderToEdit(orderId) {
+            try {
+                let res = await fetch(`http://localhost:8080/api/orders/${orderId}`);
+                let order = await res.json();
+
+                // Chỉ cho phép sửa khi chưa thanh toán (PENDING)
+                if (order.status !== 'PENDING') {
+                    alert("Chỉ có thể sửa đơn hàng ở trạng thái CHỜ (PENDING)!");
+                    return;
+                }
+
+                editingOrderId = orderId;
+                // Chuyển dữ liệu từ đơn hàng vào giỏ hàng
+                cart = order.items.map(item => ({
+                    productId: item.productId, // Đảm bảo khớp với cấu trúc entity của bạn
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity
+                }));
+                
+                renderCart();
+                updateUIForEdit(orderId);
+            } catch (e) {
+                alert("Lỗi khi tải đơn hàng: " + e.message);
+            }
+        }
+
+        function updateUIForEdit(orderId) {
+            document.getElementById("editNotice").innerHTML = `<div class="edit-mode-notice">⚠️ Đang sửa đơn hàng #${orderId}</div>`;
+            document.getElementById("btnCheckout").innerText = "CẬP NHẬT ĐƠN HÀNG";
+            document.getElementById("btnCheckout").style.background = "#007bff";
+            document.getElementById("btnCancelEdit").style.display = "block";
+        }
+
+        function cancelEdit() {
+            editingOrderId = null;
+            cart = [];
+            document.getElementById("editNotice").innerHTML = "";
+            document.getElementById("btnCheckout").innerText = "THANH TOÁN";
+            document.getElementById("btnCheckout").style.background = "#28a745";
+            document.getElementById("btnCancelEdit").style.display = "none";
+            renderCart();
+        }
+
+        // --- Chức năng bán hàng cơ bản ---
         async function loadMenu() {
             let res = await fetch('http://localhost:8080/api/products');
             let products = await res.json();
@@ -60,10 +108,12 @@
         }
 
         function renderCart() {
-            let html = cart.map(i => `
+            let html = cart.map((i, index) => `
                 <div class="cart-item">
                     <span>${i.name} x ${i.quantity}</span>
-                    <span>${(i.price * i.quantity).toLocaleString()} đ</span>
+                    <span>${(i.price * i.quantity).toLocaleString()} đ 
+                        <button onclick="removeFromCart(${index})" style="background:none; color:red; border:none; cursor:pointer; padding:0 5px;">✕</button>
+                    </span>
                 </div>
             `).join('');
             document.getElementById("cartItems").innerHTML = html;
@@ -71,19 +121,34 @@
             document.getElementById("totalPrice").innerText = total.toLocaleString();
         }
 
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        // --- Chức năng Thanh toán / Cập nhật ---
         async function checkout() {
             if(cart.length === 0) return alert("Giỏ hàng trống!");
             
-            let response = await fetch('http://localhost:8080/api/orders', {
-                method: 'POST',
+            // Nếu có ID thì dùng PUT để cập nhật, ngược lại dùng POST để tạo mới
+            const url = editingOrderId 
+                ? `http://localhost:8080/api/orders/${editingOrderId}` 
+                : 'http://localhost:8080/api/orders';
+            
+            const method = editingOrderId ? 'PUT' : 'POST';
+
+            let response = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: user.id, items: cart })
             });
 
             if(response.ok) {
-                alert("Thanh toán thành công!");
-                cart = [];
-                renderCart();
+                alert(editingOrderId ? "Cập nhật đơn hàng thành công!" : "Thanh toán thành công!");
+                cancelEdit(); // Reset về trạng thái mặc định
+            } else {
+                let errMsg = await response.text();
+                alert("Thao tác thất bại: " + errMsg);
             }
         }
 

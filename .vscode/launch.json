@@ -6,6 +6,13 @@
       "name": "QuanlysanphamApplication",
       "request": "launch",
       "mainClass": "com.example.quanlysanpham.QuanlysanphamApplication",
+      "projectName": "com.example-quanlysanpham"
+    },
+    {
+      "type": "java",
+      "name": "QuanlysanphamApplication",
+      "request": "launch",
+      "mainClass": "com.example.quanlysanpham.QuanlysanphamApplication",
       "projectName": "quanlysanpham"
     },
     {
