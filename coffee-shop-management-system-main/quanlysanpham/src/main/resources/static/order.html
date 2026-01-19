@@ -2,51 +2,220 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Bán hàng - Coffee Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Hub - POS System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #6F4E37; --secondary: #A67B5B; --bg: #f8f9fa; }
-        body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        .header { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .main-layout { display: flex; flex: 1; overflow: hidden; gap: 20px; padding: 20px; }
-        
-        /* Danh sách món */
-        .menu-container { flex: 2; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; align-content: start; }
-        .product-card { 
-            background: white; padding: 20px; border-radius: 15px; text-align: center; cursor: pointer; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s; border: 1px solid transparent;
+        :root {
+            --primary-color: #6F4E37; /* Màu cafe */
+            --secondary-color: #A67B5B;
+            --bg-color: #f8f5f2;
+            --text-dark: #332d2d;
+            --white: #ffffff;
+            --shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .product-card:hover { border-color: var(--secondary); transform: translateY(-3px); }
-        .product-card i { font-size: 30px; color: var(--secondary); margin-bottom: 10px; }
-        .price { color: var(--primary); font-weight: bold; }
 
-        /* Giỏ hàng */
-        .cart-panel { flex: 1; background: white; border-radius: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 25px; }
-        .cart-items { flex: 1; overflow-y: auto; }
-        .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .total-section { border-top: 2px solid var(--bg); padding-top: 20px; margin-top: 20px; }
-        .btn-pay { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header chuyên nghiệp */
+        header {
+            background: var(--primary-color);
+            color: var(--white);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+
+        .logo { font-size: 1.5rem; font-weight: 600; }
+        .logo i { margin-right: 10px; }
+
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid var(--white);
+            color: var(--white);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-logout:hover { background: var(--white); color: var(--primary-color); }
+
+        /* Layout chính */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Section Menu Sản phẩm */
+        .menu-section {
+            flex: 2;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            transition: 0.3s;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--secondary-color);
+            box-shadow: var(--shadow);
+        }
+
+        .product-card i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .product-card strong { display: block; margin-bottom: 5px; font-size: 1.1rem; }
+        .product-card .price { color: var(--secondary-color); font-weight: 600; }
+
+        /* Section Giỏ hàng (Cart) */
+        .cart-section {
+            flex: 1;
+            background: var(--white);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .cart-header {
+            background: #eee;
+            padding: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .cart-item-info span { display: block; font-size: 0.9rem; }
+        .cart-item-price { font-weight: 600; color: var(--primary-color); }
+
+        .btn-remove {
+            color: #ff4d4d;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .cart-footer {
+            padding: 20px;
+            background: #fdfdfd;
+            border-top: 2px solid var(--bg-color);
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .btn-pay {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary-color);
+            color: var(--white);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-pay:hover { background: #5a3e2b; }
+
+        .edit-notice {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        /* Scrollbar đẹp hơn */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--secondary-color); border-radius: 10px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h2 style="margin:0"><i class="fa-solid fa-mug-hot"></i> COFFEE HUB - Quầy Thu Ngân</h2>
-        <button onclick="logout()" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:8px 15px; border-radius:8px; cursor:pointer;">Đăng xuất</button>
-    </div>
 
-    <div class="main-layout">
-        <div class="menu-container" id="menuList"></div>
+    <header>
+        <div class="logo"><i class="fas fa-coffee"></i> COFFEE HUB</div>
+        <div class="user-info">
+            <span id="usernameDisplay" style="margin-right: 15px;"></span>
+            <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Thoát</button>
+        </div>
+    </header>
 
-        <div class="cart-panel">
-            <h3 style="border-bottom: 2px solid var(--bg); padding-bottom: 15px;"><i class="fa-solid fa-cart-shopping"></i> Chi tiết đơn hàng</h3>
-            <div id="cartItems" class="cart-items"></div>
-            
-            <div class="total-section">
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:20px; font-weight:bold;">
-                    <span>TỔNG CỘNG:</span>
-                    <span id="totalPrice" style="color:#e74c3c;">0 đ</span>
+    <div class="main-content">
+        <div class="menu-section">
+            <h3 style="margin-top: 0;"><i class="fas fa-th-large"></i> Thực đơn</h3>
+            <div class="menu-grid" id="menuList">
                 </div>
-                <button class="btn-pay" onclick="checkout()">XÁC NHẬN THANH TOÁN</button>
+        </div>
+
+        <div class="cart-section">
+            <div id="editContainer"></div> <div class="cart-header">ĐƠN HÀNG HIỆN TẠI</div>
+            
+            <div class="cart-items" id="cartItems">
+                </div>
+
+            <div class="cart-footer">
+                <div class="total-row">
+                    <span>Tổng cộng:</span>
+                    <span id="totalPrice" style="color: var(--primary-color);">0 đ</span>
+                </div>
+                <button class="btn-pay" id="btnAction" onclick="checkout()">
+                    <i class="fas fa-check-circle"></i> XÁC NHẬN THANH TOÁN
+                </button>
+                <button id="btnCancelEdit" onclick="cancelEdit()" style="display:none; width:100%; margin-top:10px; border:none; background:none; color:gray; cursor:pointer;">Hủy chỉnh sửa</button>
             </div>
         </div>
     </div>
@@ -54,19 +223,27 @@
     <script>
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user) window.location.href = "index.html";
+        document.getElementById("usernameDisplay").innerText = "Chào, " + user.username;
 
         let cart = [];
+        let editingOrderId = null;
 
+        // Tải danh sách sản phẩm
         async function loadMenu() {
-            let res = await fetch('http://localhost:8080/api/products');
-            let data = await res.json();
-            document.getElementById("menuList").innerHTML = data.map(p => `
-                <div class="product-card" onclick="addToCart(${p.id}, '${p.name}', ${p.price})">
-                    <i class="fa-solid fa-mug-saucer"></i>
-                    <div style="font-weight:bold; margin-bottom:5px;">${p.name}</div>
-                    <div class="price">${p.price.toLocaleString()} đ</div>
-                </div>
-            `).join('');
+            try {
+                let res = await fetch('http://localhost:8080/api/products');
+                let products = await res.json();
+                let html = products.map(p => `
+                    <div class="product-card" onclick="addToCart(${p.id}, '${p.name}', ${p.price})">
+                        <i class="fas fa-mug-hot"></i>
+                        <strong>${p.name}</strong>
+                        <span class="price">${p.price.toLocaleString()} đ</span>
+                    </div>
+                `).join('');
+                document.getElementById("menuList").innerHTML = html;
+            } catch (err) {
+                console.error("Lỗi tải menu:", err);
+            }
         }
 
         function addToCart(id, name, price) {
@@ -76,29 +253,101 @@
             renderCart();
         }
 
+
+        function removeFromCart(id) {
+            // Tìm món hàng trong giỏ bằng ID
+            let itemIndex = cart.findIndex(i => i.productId === id);
+            
+            if (itemIndex !== -1) {
+                // Giảm số lượng đi 1
+                cart[itemIndex].quantity--;
+                
+                // Nếu số lượng về 0 thì xóa hẳn món đó khỏi danh sách giỏ hàng
+                if (cart[itemIndex].quantity <= 0) {
+                    cart.splice(itemIndex, 1);
+                }
+            }
+            
+            // Cập nhật lại giao diện hiển thị
+            renderCart();
+        }
+
         function renderCart() {
-            document.getElementById("cartItems").innerHTML = cart.map((i, index) => `
+            let html = cart.map(i => `
                 <div class="cart-item">
-                    <span>${i.name} <strong>x${i.quantity}</strong></span>
-                    <span>${(i.price * i.quantity).toLocaleString()} đ <i class="fa-solid fa-circle-xmark" style="color:#ddd; cursor:pointer; margin-left:8px;" onclick="removeFromCart(${index})"></i></span>
+                    <span>${i.name} x ${i.quantity}</span>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span>${(i.price * i.quantity).toLocaleString()} đ</span>
+                        <button onclick="removeFromCart(${i.productId})" 
+                                style="width: auto; padding: 2px 8px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                            -
+                        </button>
+                    </div>
                 </div>
             `).join('');
+            document.getElementById("cartItems").innerHTML = html;
             let total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-            document.getElementById("totalPrice").innerText = total.toLocaleString() + " đ";
+            document.getElementById("totalPrice").innerText = total.toLocaleString();
         }
 
-        function removeFromCart(index) { cart.splice(index, 1); renderCart(); }
+        // Chức năng chỉnh sửa bill (dành cho nhân viên)
+        async function loadOrderToEdit(orderId) {
+            try {
+                let res = await fetch(`http://localhost:8080/api/orders/${orderId}`);
+                let order = await res.json();
+
+                if (order.status !== 'PENDING') {
+                    alert("Chỉ có thể sửa đơn hàng chưa thanh toán!");
+                    return;
+                }
+
+                editingOrderId = orderId;
+                cart = order.items; 
+                
+                document.getElementById("editContainer").innerHTML = `<div class="edit-notice">Đang chỉnh sửa đơn hàng #${orderId}</div>`;
+                document.getElementById("btnAction").innerHTML = '<i class="fas fa-save"></i> CẬP NHẬT ĐƠN HÀNG';
+                document.getElementById("btnCancelEdit").style.display = "block";
+                
+                renderCart();
+            } catch (e) {
+                alert("Không thể tải đơn hàng để sửa");
+            }
+        }
+
+        function cancelEdit() {
+            editingOrderId = null;
+            cart = [];
+            document.getElementById("editContainer").innerHTML = "";
+            document.getElementById("btnAction").innerHTML = '<i class="fas fa-check-circle"></i> XÁC NHẬN THANH TOÁN';
+            document.getElementById("btnCancelEdit").style.display = "none";
+            renderCart();
+        }
 
         async function checkout() {
-            if(cart.length === 0) return alert("Giỏ hàng đang trống!");
-            let res = await fetch('http://localhost:8080/api/orders', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
+            if(cart.length === 0) return alert("Vui lòng chọn món!");
+            
+            const method = editingOrderId ? 'PUT' : 'POST';
+            const url = editingOrderId ? `http://localhost:8080/api/orders/${editingOrderId}` : 'http://localhost:8080/api/orders';
+
+            let response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: user.id, items: cart })
             });
-            if(res.ok) { alert("🎉 Thanh toán thành công!"); cart = []; renderCart(); }
+
+            if(response.ok) {
+                alert(editingOrderId ? "Đã cập nhật đơn hàng!" : "Thanh toán thành công!");
+                cancelEdit();
+            } else {
+                alert("Có lỗi xảy ra, vui lòng thử lại.");
+            }
         }
 
-        function logout() { localStorage.removeItem("user"); window.location.href = "index.html"; }
+        function logout() {
+            localStorage.removeItem("user");
+            window.location.href = "index.html";
+        }
+
         loadMenu();
     </script>
 </body>
