@@ -120,6 +120,36 @@
                 msg.innerText = "Không thể kết nối Server";
             }
         }
+
+        //event cho phần đăng nhập chỉ cần nhấn enter
+        document.addEventListener("DOMContentLoaded", function() {
+        const usernameInput = document.getElementById("username");
+        const passwordInput = document.getElementById("password");
+
+        // 1. Xử lý tại ô USERNAME
+        usernameInput.addEventListener("keydown", function(event) {
+            // Nếu bấm Enter HOẶC Mũi tên Xuống
+            if (event.key === "Enter" || event.key === "ArrowDown") {
+                event.preventDefault(); // Chặn hành động mặc định
+                passwordInput.focus();  // Nhảy xuống ô mật khẩu
+            }
+        });
+
+        // 2. Xử lý tại ô PASSWORD
+        passwordInput.addEventListener("keydown", function(event) {
+            // Nếu bấm Mũi tên Lên
+            if (event.key === "ArrowUp") {
+                event.preventDefault();
+                usernameInput.focus();  // Quay ngược lên ô tài khoản (để sửa nếu nhập sai)
+            }
+            
+            // Nếu bấm Enter
+            if (event.key === "Enter") {
+                event.preventDefault();
+                login(); // Gọi hàm đăng nhập luôn
+            }
+        });
+    });
     </script>
 </body>
 </html>
