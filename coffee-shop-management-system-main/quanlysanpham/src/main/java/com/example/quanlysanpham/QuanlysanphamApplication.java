@@ -4,6 +4,7 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -23,7 +24,6 @@ public class QuanlysanphamApplication {
         String adminUrl = "http://localhost:8080/admin/staff";
         String dbUrl = "http://localhost:8080/h2-console";
 
-        // 1. In danh sách link ra Terminal để bấm cho nhanh
         System.out.println("\n----------------------------------------------------------");
         System.out.println("🚀  DỰ ÁN ĐÃ KHỞI ĐỘNG THÀNH CÔNG!  🚀");
         System.out.println("----------------------------------------------------------");

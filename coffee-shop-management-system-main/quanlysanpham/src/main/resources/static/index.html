@@ -54,6 +54,11 @@
             let p = document.getElementById("password").value;
             let msg = document.getElementById("message");
 
+            //nếu ô nhập tài khoản trống thì báo lõi
+            if(u == "" || p == ""){
+                msg.style.color = "red";
+                msg.innerText = "Vui lòng nhập đầy đủ tài khoản và mật khẩu!";
+            }
             // Reset thông báo
             msg.innerText = "Đang xử lý...";
             msg.style.color = "blue";
@@ -63,7 +68,7 @@
                 let response = await fetch('http://localhost:8080/api/auth/staff/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // 👇 ĐÃ SỬA CHỖ NÀY: username lấy giá trị của biến u, password lấy của p
+                    // username lấy giá trị của biến u, password lấy của p
                     body: JSON.stringify({ 
                         username: u, 
                         password: p 
@@ -92,15 +97,27 @@
                     }, 500);
 
                 } else {
-                    // Đăng nhập thất bại
-                    let text = await response.text();
                     msg.style.color = "red";
-                    msg.innerText = "Lỗi: " + text; // In ra lý do lỗi (vd: Sai mật khẩu)
+                    
+                    try {
+                        // Lấy dữ liệu lỗi từ Backend
+                        let errorData = await response.json();
+                        
+                        // Nếu Backend gửi kèm message (như mình đã cấu hình) thì hiện nó ra
+                        if (errorData.message) {
+                            msg.innerText = errorData.message; 
+                        } else {
+                            // Phòng hờ nếu lỗi lạ không có message
+                            msg.innerText = "Tài khoản hoặc mật khẩu sai";
+                        }
+                    } catch (e) {
+                        msg.innerText = "Lỗi kết nối hoặc lỗi server";
+                    }
                 }
             } catch (error) {
                 console.error(error);
                 msg.style.color = "red";
-                msg.innerText = "Không thể kết nối Server (Kiểm tra xem Server bật chưa?)";
+                msg.innerText = "Không thể kết nối Server";
             }
         }
     </script>

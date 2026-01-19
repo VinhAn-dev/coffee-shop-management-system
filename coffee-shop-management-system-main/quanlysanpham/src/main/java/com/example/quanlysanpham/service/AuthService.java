@@ -12,55 +12,51 @@ import com.example.quanlysanpham.repository.UserRepository;
 public class AuthService {
 
     private final UserRepository userRepository;
-    // private final TokenStore tokenStore; // Tạm tắt
 
-    // Constructor bỏ TokenStore tạm thời để test cho dễ
     public AuthService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     /**
-     * Hàm đăng nhập CHUNG cho cả Admin và Staff
+    Hàm đăng nhập CHUNG cho cả Admin và Staff
      */
     public LoginResponse loginStaff(String username, String password) {
-        // 1. Kiểm tra đầu vào
+        /*
+        kiểm tra đầu vào rỗng 
+        phải có vì nếu actor quên nhập thì hiện thông báo
+        */ 
         if (username == null || username.isBlank() || password == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu username/password");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng nhập đầy đủ thông tin");
         }
 
-        // 2. Tìm user (SỬA LỖI Ở ĐÂY: User không phải là Optional)
+        // 2. Tìm user trong database
         User user = userRepository.findByUsername(username);
 
-        // Nếu không tìm thấy thì user sẽ là null
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Tài khoản không tồn tại");
+        // 3. KIỂM TRA GỘP (QUAN TRỌNG):
+        // Nếu (User không tìm thấy) HOẶC (Mật khẩu không khớp) -> Báo lỗi chung
+        if (user == null || !user.getPassword().equals(password)) {
+            // Ném lỗi 401 Unauthorized kèm thông báo chung
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai tài khoản hoặc mật khẩu");
         }
 
-        // 3. So sánh password
-        if (!user.getPassword().equals(password)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai mật khẩu");
-        }
-
-        // 4. [QUAN TRỌNG] Bỏ đoạn chặn Admin đi. 
-        // Hoặc cho phép nếu là ADMIN hoặc STAFF
+        // 4. Kiểm tra quyền (Chặn nếu không phải ADMIN hoặc STAFF)
         String role = user.getRole();
         if (!"ADMIN".equalsIgnoreCase(role) && !"STAFF".equalsIgnoreCase(role)) {
              throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tài khoản không có quyền truy cập");
         }
 
-        // 5. Tạo token giả (hoặc dùng TokenStore của mày nếu đã có)
-        // String token = tokenStore.issueToken(user.getId()); 
-        String token = "dummy-token-123456"; // Token giả để test trước
+        // 5. Tạo token giả
+        String token = "dummy-token-123456"; 
 
         return new LoginResponse(
-                token, // Trả về token
-                user.getRole(), // role
-                user.getFullName(), // fullName
-                user.getId() // id
+                token, 
+                user.getRole(), 
+                user.getFullName(), 
+                user.getId() 
         );
     }
 
     public void logout(String token) {
-        // tokenStore.invalidate(token);
+        // Xử lý logout sau
     }
 }
