@@ -182,6 +182,28 @@
         /* Scrollbar đẹp hơn */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: var(--secondary-color); border-radius: 10px; }
+
+        /* CSS hỗ trợ in hóa đơn */
+        #printableBill {
+            display: none;
+            font-family: 'Courier New', Courier, monospace;
+            width: 300px;
+            padding: 10px;
+            color: #000;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printableBill, #printableBill * { visibility: visible; }
+            #printableBill {
+                display: block;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -200,6 +222,37 @@
             <div class="menu-grid" id="menuList">
                 </div>
         </div>
+         
+    <div id="printableBill">
+        <div style="text-align: center;">
+            <h2 style="margin-bottom: 5px;">COFFEE HUB</h2>
+            <p style="margin: 0;">ĐC: 123 Đường Coffee, TP. HCM</p>
+            <p style="margin: 5px 0;">---------------------------</p>
+            <h4 style="margin: 10px 0;">HÓA ĐƠN THANH TOÁN</h4>
+        </div>
+        <p>Giờ: <span id="billTime"></span></p>
+        <p>Nhân viên: <span id="billStaff"></span></p>
+        <p>---------------------------</p>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px dashed #000;">
+                    <th align="left">Món</th>
+                    <th align="center">SL</th>
+                    <th align="right">Giá</th>
+                </tr>
+            </thead>
+            <tbody id="billItems"></tbody>
+        </table>
+        <p>---------------------------</p>
+        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem;">
+            <span>TỔNG CỘNG:</span>
+            <span id="billTotal">0 đ</span>
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+            <p>Cảm ơn quý khách!</p>
+            <p>Hẹn gặp lại!</p>
+        </div>
+    </div>
 
         <div class="cart-section">
             <div id="editContainer"></div> <div class="cart-header">ĐƠN HÀNG HIỆN TẠI</div>
@@ -336,6 +389,26 @@
             });
 
             if(response.ok) {
+                // 1. Chuẩn bị dữ liệu cho hóa đơn
+                const now = new Date();
+                document.getElementById("billTime").innerText = now.toLocaleString('vi-VN');
+                document.getElementById("billStaff").innerText = user.username;
+                
+                let billHtml = cart.map(i => `
+                    <tr>
+                        <td style="padding: 5px 0;">${i.name}</td>
+                        <td align="center">${i.quantity}</td>
+                        <td align="right">${(i.price * i.quantity).toLocaleString()} đ</td>
+                    </tr>
+                `).join('');
+                
+                document.getElementById("billItems").innerHTML = billHtml;
+                document.getElementById("billTotal").innerText = document.getElementById("totalPrice").innerText + " đ";
+
+                // 2. Thực hiện lệnh in
+                window.print();
+
+                // 3. Thông báo và reset
                 alert(editingOrderId ? "Đã cập nhật đơn hàng!" : "Thanh toán thành công!");
                 cancelEdit();
             } else {
