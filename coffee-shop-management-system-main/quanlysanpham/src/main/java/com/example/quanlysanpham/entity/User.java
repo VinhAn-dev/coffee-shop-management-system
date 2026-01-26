@@ -102,11 +102,4 @@ public class User {
         this.orders = orders;
     }
 
-    public boolean isEmpty() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public User get() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 }

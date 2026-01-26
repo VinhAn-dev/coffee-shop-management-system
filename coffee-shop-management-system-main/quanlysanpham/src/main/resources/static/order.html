@@ -156,8 +156,25 @@
             margin-bottom: 15px;
         }
 
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-print {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #ffc107; /* Màu vàng */
+            color: #333;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         .btn-pay {
-            width: 100%;
+            flex: 1;
             padding: 15px;
             border: none;
             border-radius: 10px;
@@ -223,39 +240,41 @@
                 </div>
         </div>
          
-    <div id="printableBill">
-        <div style="text-align: center;">
-            <h2 style="margin-bottom: 5px;">COFFEE HUB</h2>
-            <p style="margin: 0;">ĐC: 123 Đường Coffee, TP. HCM</p>
-            <p style="margin: 5px 0;">---------------------------</p>
-            <h4 style="margin: 10px 0;">HÓA ĐƠN THANH TOÁN</h4>
+        <div id="printableBill">
+            <div style="text-align: center;">
+                <h2 style="margin-bottom: 5px;">COFFEE HUB</h2>
+                <p style="margin: 0;">ĐC: 123 Đường Coffee, TP. HCM</p>
+                <p style="margin: 5px 0;">---------------------------</p>
+                <h4 style="margin: 10px 0;" id="printTitle">HÓA ĐƠN THANH TOÁN</h4>
+                <p style="font-size: 12px; font-style: italic;" id="printStatus"></p>
+            </div>
+            <p>Giờ: <span id="billTime"></span></p>
+            <p>Thu ngân: <span id="billStaff"></span></p>
+            <p>---------------------------</p>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 1px dashed #000;">
+                        <th align="left">Món</th>
+                        <th align="center">SL</th>
+                        <th align="right">Giá</th>
+                    </tr>
+                </thead>
+                <tbody id="billItems"></tbody>
+            </table>
+            <p>---------------------------</p>
+            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem;">
+                <span>TỔNG CỘNG:</span>
+                <span id="billTotal">0 đ</span>
+            </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <p>Cảm ơn quý khách!</p>
+                <p>Hẹn gặp lại!</p>
+            </div>
         </div>
-        <p>Giờ: <span id="billTime"></span></p>
-        <p>Nhân viên: <span id="billStaff"></span></p>
-        <p>---------------------------</p>
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="border-bottom: 1px dashed #000;">
-                    <th align="left">Món</th>
-                    <th align="center">SL</th>
-                    <th align="right">Giá</th>
-                </tr>
-            </thead>
-            <tbody id="billItems"></tbody>
-        </table>
-        <p>---------------------------</p>
-        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem;">
-            <span>TỔNG CỘNG:</span>
-            <span id="billTotal">0 đ</span>
-        </div>
-        <div style="text-align: center; margin-top: 30px;">
-            <p>Cảm ơn quý khách!</p>
-            <p>Hẹn gặp lại!</p>
-        </div>
-    </div>
 
         <div class="cart-section">
-            <div id="editContainer"></div> <div class="cart-header">ĐƠN HÀNG HIỆN TẠI</div>
+            <div id="editContainer"></div> 
+            <div class="cart-header">ĐƠN HÀNG HIỆN TẠI</div>
             
             <div class="cart-items" id="cartItems">
                 </div>
@@ -265,40 +284,59 @@
                     <span>Tổng cộng:</span>
                     <span id="totalPrice" style="color: var(--primary-color);">0 đ</span>
                 </div>
-                <button class="btn-pay" id="btnAction" onclick="checkout()">
-                    <i class="fas fa-check-circle"></i> XÁC NHẬN THANH TOÁN
+                
+                <div class="btn-group">
+                    <button class="btn-pay" onclick="processPayment()">
+                        <i class="fas fa-print"></i> THANH TOÁN & IN HÓA ĐƠN
+                    </button>
+                </div>
+
+                <button onclick="resetCart()" style="width:100%; margin-top:10px; border:none; background:none; color:gray; cursor:pointer;">
+                    <i class="fas fa-trash-alt"></i> Xóa chọn lại
                 </button>
-                <button id="btnCancelEdit" onclick="cancelEdit()" style="display:none; width:100%; margin-top:10px; border:none; background:none; color:gray; cursor:pointer;">Hủy chỉnh sửa</button>
+
+                <button id="btnCancelEdit" onclick="cancelEdit()" style="display:none; width:100%; margin-top:10px; border:none; background:none; color:gray; cursor:pointer;">
+                    <i class="fas fa-times"></i> Hủy chỉnh sửa / Tạo đơn mới
+                </button>
             </div>
         </div>
     </div>
 
     <script>
+        // 1. Kiểm tra đăng nhập
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user) window.location.href = "index.html";
-        document.getElementById("usernameDisplay").innerText = "Chào, " + user.username;
+        document.getElementById("usernameDisplay").innerText = "Chào, " + (user.fullName || user.username);
 
         let cart = [];
         let editingOrderId = null;
 
-        // Tải danh sách sản phẩm
+        // 2. Tải Menu
         async function loadMenu() {
             try {
                 let res = await fetch('http://localhost:8080/api/products');
                 let products = await res.json();
-                let html = products.map(p => `
-                    <div class="product-card" onclick="addToCart(${p.id}, '${p.name}', ${p.price})">
+                
+                // Chỉ hiện món đang bán (available = true)
+                let activeProducts = products.filter(p => p.available);
+
+                let html = activeProducts.map(p => {
+                    // Fix lỗi tên có dấu nháy đơn
+                    let safeName = p.name.replace(/'/g, "\\'"); 
+                    return `
+                    <div class="product-card" onclick="addToCart(${p.id}, '${safeName}', ${p.price})">
                         <i class="fas fa-mug-hot"></i>
                         <strong>${p.name}</strong>
                         <span class="price">${p.price.toLocaleString()} đ</span>
                     </div>
-                `).join('');
+                `}).join('');
                 document.getElementById("menuList").innerHTML = html;
             } catch (err) {
                 console.error("Lỗi tải menu:", err);
             }
         }
 
+        // 3. Logic Giỏ hàng
         function addToCart(id, name, price) {
             let item = cart.find(i => i.productId === id);
             if(item) item.quantity++;
@@ -306,31 +344,24 @@
             renderCart();
         }
 
-
         function removeFromCart(id) {
-            // Tìm món hàng trong giỏ bằng ID
             let itemIndex = cart.findIndex(i => i.productId === id);
-            
             if (itemIndex !== -1) {
-                // Giảm số lượng đi 1
                 cart[itemIndex].quantity--;
-                
-                // Nếu số lượng về 0 thì xóa hẳn món đó khỏi danh sách giỏ hàng
-                if (cart[itemIndex].quantity <= 0) {
-                    cart.splice(itemIndex, 1);
-                }
+                if (cart[itemIndex].quantity <= 0) cart.splice(itemIndex, 1);
             }
-            
-            // Cập nhật lại giao diện hiển thị
             renderCart();
         }
 
         function renderCart() {
             let html = cart.map(i => `
                 <div class="cart-item">
-                    <span>${i.name} x ${i.quantity}</span>
+                    <div class="cart-item-info">
+                        <strong>${i.name}</strong>
+                        <span>SL: ${i.quantity}</span>
+                    </div>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span>${(i.price * i.quantity).toLocaleString()} đ</span>
+                        <span class="cart-item-price">${(i.price * i.quantity).toLocaleString()} đ</span>
                         <button onclick="removeFromCart(${i.productId})" 
                                 style="width: auto; padding: 2px 8px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">
                             -
@@ -343,7 +374,7 @@
             document.getElementById("totalPrice").innerText = total.toLocaleString();
         }
 
-        // Chức năng chỉnh sửa bill (dành cho nhân viên)
+        // 4. Load đơn để sửa (Mapping lại dữ liệu Backend -> Frontend)
         async function loadOrderToEdit(orderId) {
             try {
                 let res = await fetch(`http://localhost:8080/api/orders/${orderId}`);
@@ -355,10 +386,16 @@
                 }
 
                 editingOrderId = orderId;
-                cart = order.items; 
                 
-                document.getElementById("editContainer").innerHTML = `<div class="edit-notice">Đang chỉnh sửa đơn hàng #${orderId}</div>`;
-                document.getElementById("btnAction").innerHTML = '<i class="fas fa-save"></i> CẬP NHẬT ĐƠN HÀNG';
+                // MAP DỮ LIỆU TỪ BACKEND VỀ FRONTEND
+                cart = order.items.map(item => ({
+                    productId: item.product.id,
+                    name: item.product.name,
+                    price: item.product.price,
+                    quantity: item.quantity
+                }));
+                
+                document.getElementById("editContainer").innerHTML = `<div class="edit-notice">⚠️ Đang sửa đơn #${orderId}</div>`;
                 document.getElementById("btnCancelEdit").style.display = "block";
                 
                 renderCart();
@@ -367,55 +404,81 @@
             }
         }
 
-        function cancelEdit() {
-            editingOrderId = null;
-            cart = [];
-            document.getElementById("editContainer").innerHTML = "";
-            document.getElementById("btnAction").innerHTML = '<i class="fas fa-check-circle"></i> XÁC NHẬN THANH TOÁN';
-            document.getElementById("btnCancelEdit").style.display = "none";
-            renderCart();
-        }
-
-        async function checkout() {
-            if(cart.length === 0) return alert("Vui lòng chọn món!");
+        async function processPayment() {
+            if(cart.length === 0) return alert("Chưa chọn món nào cả!");
             
-            const method = editingOrderId ? 'PUT' : 'POST';
-            const url = editingOrderId ? `http://localhost:8080/api/orders/${editingOrderId}` : 'http://localhost:8080/api/orders';
+            // Mặc định luôn là PAID (Đã thanh toán)
+            const status = 'PAID'; 
 
-            let response = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.id, items: cart })
-            });
+            // Payload gửi đi
+            const payload = {
+                userId: user.userId, // Đảm bảo localStorage đã đúng như bước trước
+                items: cart.map(i => ({ productId: i.productId, quantity: i.quantity })),
+                status: status
+            };
 
-            if(response.ok) {
-                // 1. Chuẩn bị dữ liệu cho hóa đơn
-                const now = new Date();
-                document.getElementById("billTime").innerText = now.toLocaleString('vi-VN');
-                document.getElementById("billStaff").innerText = user.username;
-                
-                let billHtml = cart.map(i => `
-                    <tr>
-                        <td style="padding: 5px 0;">${i.name}</td>
-                        <td align="center">${i.quantity}</td>
-                        <td align="right">${(i.price * i.quantity).toLocaleString()} đ</td>
-                    </tr>
-                `).join('');
-                
-                document.getElementById("billItems").innerHTML = billHtml;
-                document.getElementById("billTotal").innerText = document.getElementById("totalPrice").innerText + " đ";
+            try {
+                // Luôn tạo đơn mới (POST) vì trả tiền xong là xong, không sửa tới lui
+                let response = await fetch('http://localhost:8080/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-                // 2. Thực hiện lệnh in
-                window.print();
+                if(response.ok) {
+                    let savedOrder = await response.json();
 
-                // 3. Thông báo và reset
-                alert(editingOrderId ? "Đã cập nhật đơn hàng!" : "Thanh toán thành công!");
-                cancelEdit();
-            } else {
-                alert("Có lỗi xảy ra, vui lòng thử lại.");
+                    // 1. In hóa đơn ngay lập tức
+                    printBill(savedOrder.id);
+
+                    // 2. Thông báo & Xóa giỏ hàng để làm đơn mới
+                    // (Delay 1 xíu để lệnh in chạy trước khi alert hiện lên)
+                    setTimeout(() => {
+                        resetCart();
+                    }, 1000);
+                    
+                } else {
+                    alert("Lỗi! Không thể lưu đơn hàng.");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi kết nối Server!");
             }
         }
 
+        function printBill(orderId) {
+            // 1. Điền thông tin hóa đơn
+            const now = new Date();
+            document.getElementById("billTime").innerText = now.toLocaleString('vi-VN');
+            document.getElementById("billStaff").innerText = user.fullName || ("Staff " + user.userId);
+            
+            // Tiêu đề cố định
+            document.getElementById("printTitle").innerText = "HÓA ĐƠN THANH TOÁN";
+            document.getElementById("printStatus").innerText = `(Mã đơn: #${orderId} - Đã thanh toán)`;
+
+            // 2. Render món ăn ra bill
+            let billHtml = cart.map(i => `
+                <tr>
+                    <td style="padding: 5px 0;">${i.name}</td>
+                    <td align="center">${i.quantity}</td>
+                    <td align="right">${(i.price * i.quantity).toLocaleString()}</td>
+                </tr>
+            `).join('');
+            
+            document.getElementById("billItems").innerHTML = billHtml;
+            document.getElementById("billTotal").innerText = document.getElementById("totalPrice").innerText + " đ";
+
+            // 3. Gọi lệnh in trình duyệt
+            window.print();
+        }
+
+        function resetCart() {
+            cart = [];
+            renderCart();
+            // Xóa các thông báo edit nếu có
+            document.getElementById("editContainer").innerHTML = "";
+        }
+        
         function logout() {
             localStorage.removeItem("user");
             window.location.href = "index.html";

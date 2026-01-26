@@ -1,6 +1,5 @@
 package com.example.quanlysanpham.entity;
 
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,7 +24,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
-//đại diện cho hóa đơn tổng
+// Đại diện cho hóa đơn tổng
 @Entity
 @Table(name = "orders")
 public class Order {
@@ -34,46 +33,51 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ngày tạo đơn
+    // Ngày tạo đơn
     @Column(nullable = false)
     private LocalDateTime orderDate;
 
-    // người tạo đơn (nhân viên)
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    // Người tạo đơn (nhân viên)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-    // danh sách các món trong đơn
-    @JsonIgnore
-    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> orderItems = new ArrayList<>();
-
-    // trạng thái đơn hàng
-    @Enumerated(EnumType.STRING)
+    // Trạng thái đơn
+    @Enumerated(EnumType.STRING) // Lưu chữ "PENDING" vào DB
     @Column(nullable = false)
     private OrderStatus status = OrderStatus.PENDING;
 
-    // tổng tiền (tính từ orderItems)
+    // Danh sách các món trong đơn
+    // Tao đổi tên từ orderItems -> items để khớp với OrderService và Getter/Setter
+    @JsonIgnore
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>();
+
+    // Tổng tiền
     @Column(name = "total_amount")
     private BigDecimal totalAmount;
-    public Order(){}
+
+    // ===== CONSTRUCTOR =====
+    public Order() {}
 
     public Order(LocalDateTime orderDate, User createdBy, OrderStatus status) {
         this.orderDate = orderDate;
         this.createdBy = createdBy;
         this.status = status;
     }
-    // thêm hàm này để add món chuẩn quan hệ 2 chiều
+
+    // ===== HELPER METHODS (Thêm/Xóa món) =====
     public void addOrderItem(OrderItem item) {
-        orderItems.add(item);
+        items.add(item);
         item.setOrder(this); // Quan trọng: Gán order cho item
     }
-    // hàm này để xóa món đó ra khỏi danh danh sách order nếu như khách hàng thay đổi món hoặc nhân viên cần sửa bill trước thanh toán
+
     public void removeOrderItem(OrderItem item) {
-        orderItems.remove(item);
+        items.remove(item);
         item.setOrder(null);
     }
-    // ===== Getter/Setter =====
+
+    // ===== GETTER / SETTER =====
 
     public Long getId() {
         return id;
@@ -99,12 +103,29 @@ public class Order {
         this.createdBy = createdBy;
     }
 
-    public List<OrderItem> getOrderItems() {
-        return orderItems;
+    // Hàm này giúp Service gọi order.setUser(...) không bị lỗi
+    public void setUser(User staff) {
+        this.createdBy = staff;
     }
 
-    public void setOrderItems(List<OrderItem> orderItems) {
-        this.orderItems = orderItems;
+    public List<OrderItem> getItems() { // Đổi tên getter cho chuẩn
+        return items;
+    }
+    
+    // Giữ lại getter cũ nếu code khác có gọi, nhưng trỏ về items
+    public List<OrderItem> getOrderItems() {
+        return items;
+    }
+
+    public void setItems(List<OrderItem> items) {
+        this.items = items;
+        if(items != null) {
+            for(OrderItem item : items) item.setOrder(this);
+        }
+    }
+    
+    public void setOrderItems(List<OrderItem> items) {
+        setItems(items);
     }
 
     public OrderStatus getStatus() {
@@ -112,30 +133,32 @@ public class Order {
     }
 
     public void setStatus(OrderStatus status) {
-        this.status = status;
+        if(status != null){
+            this.status = status;
+        }
     }
 
-    // tính tổng tiền từ các orderItems
-    // --- SỬA 1: Tách hàm tính toán riêng (Void) ---
-    // Hàm này tự chạy TRƯỚC khi lưu vào DB
-    @PrePersist
-    @PreUpdate
-    public void calculateTotalAmount() {
-        if (orderItems == null || orderItems.isEmpty()) {
-            this.totalAmount = BigDecimal.ZERO;
-        } else {
-            this.totalAmount = orderItems.stream()
-                    .map(OrderItem::getLineTotal)
-                    .filter(val -> val != null) // Lọc null cho an toàn
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-   
-                }
-    }
     public BigDecimal getTotalAmount() {
         return totalAmount;
     }
 
     public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    // ===== LIFECYCLE CALLBACK (QUAN TRỌNG: Chỉ giữ 1 hàm duy nhất) =====
+    // Gộp tất cả logic: Lấy giờ, Set trạng thái, Tính tiền vào đây
+    @PrePersist
+    @PreUpdate
+    protected void onLifecycleEvents() {
+        // 1. Tự động lấy giờ nếu chưa có
+        if (this.orderDate == null) {
+            this.orderDate = LocalDateTime.now();
+        }
+
+        // 2. Tự động set trạng thái mặc định
+        if (this.status == null) {
+            this.status = OrderStatus.PENDING;
+        }
     }
 }

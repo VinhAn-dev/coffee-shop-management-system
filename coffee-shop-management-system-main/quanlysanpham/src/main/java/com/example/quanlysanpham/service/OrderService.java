@@ -1,46 +1,95 @@
 package com.example.quanlysanpham.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.quanlysanpham.dto.ItemDTO;
+import com.example.quanlysanpham.dto.OrderRequest;
 import com.example.quanlysanpham.entity.Order;
+import com.example.quanlysanpham.entity.OrderItem;
+import com.example.quanlysanpham.entity.Product;
+import com.example.quanlysanpham.entity.User;
 import com.example.quanlysanpham.enums.OrderStatus;
 import com.example.quanlysanpham.repository.OrderRepository;
+import com.example.quanlysanpham.repository.ProductRepository;
+import com.example.quanlysanpham.repository.UserRepository;
 
 @Service // Bắt buộc có để Controller ở trên gọi được
 public class OrderService {
 
-    @Autowired
-    private OrderRepository orderRepo;
+    @Autowired private OrderRepository orderRepo;
+    @Autowired private UserRepository userRepo;
+    @Autowired private ProductRepository productRepo;
 
-    // Hàm này dùng để: LƯU ĐƠN HÀNG VÀO DATABASE
-    public Order saveOrder(Order order) {
-        // (Sau này có thể viết thêm code tính tổng tiền, trừ tồn kho... ở đây)
+    public Order createOrder(OrderRequest request){
+        Order order = new Order();
+        order.setOrderDate(LocalDateTime.now());
+        
+        User staff = userRepo.findById(request.getUserId()).orElse(null);
+        if (staff == null) {
+            throw new RuntimeException("Không tìm thấy nhân viên!");
+        }
+        order.setCreatedBy(staff);
+        // ép kiểu từ String (request) sang Enum (OrderStatus)
+        try {
+            order.setStatus(OrderStatus.valueOf(request.getStatus())); 
+        } catch (Exception e) {
+            // Nếu null hoặc gửi sai chữ, mặc định set là PENDING
+            order.setStatus(OrderStatus.PENDING);
+        }
+        // Gọi hàm xử lý với ItemDTO
+        processOrderItems(order, request.getItems());
+
         return orderRepo.save(order);
     }
-
-    // Hàm này dùng để: LẤY HẾT DỮ LIỆU TỪ BẢNG ORDERS RA
-    public List<Order> getAllOrders() {
-        return orderRepo.findAll();
-    }
     
-
-    //Hàm này dùng để: LẤY ĐƠN HÀNG THEO ID
-    public Order getOrderById(Long id) {
-        return orderRepo.findById(id).orElse(null);
-    }
-    // Hàm này dùng để: CẬP NHẬT ĐƠN HÀNG (CHỈ CẬP NHẬT KHI TRẠNG THÁI LÀ PENDING)
-    public Order updateOrder(Long id, Order updatedOrder) {
+    //ham cap nhat don
+    public Order updateOrder(Long id, OrderRequest request) {
         Order existingOrder = orderRepo.findById(id).orElse(null);
-        if (existingOrder != null && existingOrder.getStatus() == OrderStatus.PENDING) {
-            // Cập nhật các thông tin cần thiết, ví dụ: danh sách món ăn
-            existingOrder.setId(updatedOrder.getId());
-            // Có thể tính toán lại tổng tiền ở đây nếu cần
+        
+        if (existingOrder != null) {
+            // Cập nhật trạng thái
+            try {
+                existingOrder.setStatus(OrderStatus.valueOf(request.getStatus()));
+            } catch (Exception e) {
+                // Giữ nguyên trạng thái cũ hoặc set PENDING tùy logic
+            }
+            // Xóa món cũ, thêm món mới
+            existingOrder.getOrderItems().clear();
+            processOrderItems(existingOrder, request.getItems());
+
             return orderRepo.save(existingOrder);
         }
         return null;
     }
 
+    //ham xu ly mon tinh tien
+    private void processOrderItems(Order order, List<ItemDTO> itemDTOs) {
+        if (itemDTOs == null) return;
+
+        double total = 0;
+
+        for (ItemDTO dto : itemDTOs) {
+            Product product = productRepo.findById(dto.getProductId()).orElse(null);
+            
+            if (product != null) {
+                OrderItem item = new OrderItem();
+                item.setProduct(product);
+                item.setQuantity(dto.getQuantity());
+                item.setPriceAtOrder(product.getPrice()); // Lấy giá gốc từ DB
+                
+                // Set quan hệ 2 chiều
+                order.addOrderItem(item); // Hoặc: item.setOrder(order); order.getItems().add(item);
+                
+                total += item.getPriceAtOrder().doubleValue() * item.getQuantity();
+            }
+        }
+        // Cập nhật tổng tiền
+        order.setTotalAmount(java.math.BigDecimal.valueOf(total));
+    }
+    public Order getOrderById(Long id) { return orderRepo.findById(id).orElse(null); }
+    public List<Order> getAllOrders() { return orderRepo.findAll(); }
 }
