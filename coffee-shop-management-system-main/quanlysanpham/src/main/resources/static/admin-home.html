@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ thống Quản lý - Coffee Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6F4E37; --secondary: #A67B5B; --accent: #ECB176;
+            --bg: #fdfaf7; --white: #ffffff; --text: #3d2b1f;
+        }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg); margin: 0; color: var(--text); }
+        .navbar { background: var(--primary); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .container { max-width: 1000px; margin: 50px auto; padding: 20px; text-align: center; }
+        .dashboard-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 40px; }
+        .card { 
+            background: var(--white); padding: 40px; border-radius: 20px; text-decoration: none; color: var(--text);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: 0.3s; border: 1px solid #eee;
+        }
+        .card:hover { transform: translateY(-10px); border-color: var(--accent); box-shadow: 0 15px 30px rgba(111,78,55,0.1); }
+        .card i { font-size: 50px; color: var(--secondary); margin-bottom: 20px; }
+        .card h3 { margin: 10px 0; font-weight: 600; }
+        .btn-logout { background: #e74c3c; color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h2 style="margin:0"><i class="fa-solid fa-mug-hot"></i> Coffee Hub Admin</h2>
+        <button onclick="logout()" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+    </div>
+    <div class="container">
+        <h1>Bảng Điều Khiển Quản Trị</h1>
+        <p>Chào mừng quay trở lại, vui lòng chọn một tác vụ để tiếp tục</p>
+        <div class="dashboard-menu">
+            <a href="products.html" class="card">
+                <i class="fa-solid fa-utensils"></i>
+                <h3>Quản lý Thực Đơn</h3>
+                <p>Cập nhật danh sách đồ uống</p>
+            </a>
+            <a href="history.html" class="card">
+                <i class="fa-solid fa-receipt"></i>
+                <h3>Lịch sử Đơn Hàng</h3>
+                <p>Xem doanh thu và hóa đơn</p>
+            </a>
+        </div>
+    </div>
+    <script>
+        function logout() { localStorage.removeItem("user"); window.location.href = "index.html"; }
+    </script>
+</body>
+</html>

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ☕ Coffee Hub - Hệ thống Quản lý Quán Cà Phê
 
 ## 📝 Giới thiệu
@@ -25,6 +24,3 @@ Coffee Hub là một ứng dụng web Full-stack giúp quản lý quy trình bá
    - Trang bán hàng: `http://localhost:8080`
    - Tài khoản demo: `admin` / `123`
    - Tài khoảng staff: `staff` / `123`
-=======
-# coffee-shop-management-system
->>>>>>> 6e3dd769cf1301c4a632090e08d270d90a0c756e

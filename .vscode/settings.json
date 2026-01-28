@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",
   "C_Cpp_Runner.debuggerPath": "gdb",
@@ -62,8 +61,4 @@
 =======
 >>>>>>> Stashed changes
   "java.compile.nullAnalysis.mode": "automatic"
-=======
-    "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "interactive"
->>>>>>> 6e3dd769cf1301c4a632090e08d270d90a0c756e
 }
