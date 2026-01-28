@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Danh sách Sản phẩm</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="container mt-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fa-solid fa-list"></i> Quản lý Thực đơn</h2>
+        <a href="/admin-home.html" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Về trang chủ
+        </a>
+    </div>
+
+    <a href="/products/new" class="btn btn-success mb-3">
+        <i class="fa-solid fa-plus"></i> Thêm món mới
+    </a>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Tên món</th>
+                <th>Giá</th>
+                <th>Mô tả</th>
+                <th style="width: 150px;">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="p : ${products}">
+                <td th:text="${p.name}" class="fw-bold"></td>
+                
+                <td class="text-success fw-bold" 
+                    th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' VNĐ'">
+                </td>
+                
+                <td th:text="${p.description}"></td>
+                
+                <td>
+                    <a th:href="@{/products/edit/{id}(id=${p.id})}" class="btn btn-warning btn-sm">
+                        <i class="fa-solid fa-pen"></i>
+                    </a>
+                    <a th:href="@{/products/delete/{id}(id=${p.id})}" class="btn btn-danger btn-sm"
+                       onclick="return confirm('Bạn có chắc muốn xóa món này không?')">
+                       <i class="fa-solid fa-trash"></i>
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div th:if="${products.empty}" class="alert alert-warning text-center">
+        Chưa có món nào trong thực đơn. Hãy thêm món mới!
+    </div>
+
+</body>
+</html>
