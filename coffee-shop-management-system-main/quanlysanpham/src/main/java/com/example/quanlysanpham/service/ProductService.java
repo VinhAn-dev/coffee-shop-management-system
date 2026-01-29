@@ -14,23 +14,21 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository;
 
-    // Hàm lấy tất cả sản phẩm (Controller đang tìm cái này)
+    // SỬA: Thay findByIsAvailableTrue() bằng findAll()
     public List<Product> getAllProducts() {
-        return productRepository.findByIsAvailableTrue();
+        return productRepository.findAll();
     }
 
-    // Hàm lưu sản phẩm (Controller đang tìm cái này)
     public void saveProduct(Product product) {
         productRepository.save(product);
     }
 
-    // Hàm lấy sản phẩm theo ID
     public Product getProductById(Long id) {
         return productRepository.findById(id).orElse(null);
     }
 
-    // Hàm xóa sản phẩm
+    // SỬA: Thay softDelete() bằng deleteById() (Xóa luôn khỏi DB)
     public void deleteProduct(Long id) {
-        productRepository.softDelete(id);
+        productRepository.deleteById(id);
     }
 }

@@ -1,57 +1,54 @@
 package com.example.quanlysanpham.controller;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.example.quanlysanpham.entity.Product;
-import com.example.quanlysanpham.service.ProductService;
+import com.example.quanlysanpham.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller; // Dùng Controller này mới ra giao diện
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
-@RestController // ⚠️ Phải dùng cái này cho API, đừng dùng @Controller
-@RequestMapping("/api/products") // Đường dẫn chuẩn API
-@CrossOrigin(origins = "*")      // Mở cửa cho Frontend gọi vào
+@Controller // Đổi từ @RestController sang @Controller
 public class ProductController {
 
     @Autowired
-    private ProductService productService;
+    private ProductRepository productRepository;
 
-    // 1. Lấy danh sách sản phẩm (Frontend gọi GET /api/products)
-    @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    // 1. Hiển thị danh sách (GET /products)
+    // Đường dẫn này khớp với menu "Quản lý thực đơn" ở trang chủ
+    @GetMapping("/products")
+    public String listProducts(Model model) {
+        // Lấy danh sách từ DB gửi sang HTML
+        model.addAttribute("products", productRepository.findAll());
+        return "product-list"; // Trả về file product-list.html
     }
 
-    // 2. Thêm mới hoặc Sửa (Frontend gọi POST /api/products)
-    @PostMapping
-    public ResponseEntity<String> saveProduct(@RequestBody Product product) {
-        // Log kiểm tra xem dữ liệu có tới nơi không
-        System.out.println(">>> Đang lưu sản phẩm: " + product.getName());
-        
-        productService.saveProduct(product);
-        return ResponseEntity.ok("Đã lưu thành công!");
+    // 2. Hiển thị form thêm mới (GET /products/new)
+    @GetMapping("/products/new")
+    public String showNewForm(Model model) {
+        model.addAttribute("product", new Product());
+        return "product-form"; // Trả về file product-form.html
     }
 
-    // 3. Lấy chi tiết 1 sản phẩm (để sửa)
-    @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        Product p = productService.getProductById(id);
-        if(p != null) return ResponseEntity.ok(p);
-        return ResponseEntity.notFound().build();
+    // 3. Xử lý lưu sản phẩm (POST /products/save)
+    @PostMapping("/products/save")
+    public String saveProduct(@ModelAttribute("product") Product product) {
+        productRepository.save(product);
+        return "redirect:/products"; // Lưu xong quay về trang danh sách
     }
 
-    // 4. Xóa sản phẩm
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
-        return ResponseEntity.ok("Đã xóa thành công!");
+    // 4. Hiển thị form sửa (GET /products/edit/{id})
+    @GetMapping("/products/edit/{id}")
+    public String showEditForm(@PathVariable Long id, Model model) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
+        model.addAttribute("product", product);
+        return "product-form"; // Dùng lại form thêm mới để làm form sửa
+    }
+
+    // 5. Xóa sản phẩm (GET /products/delete/{id})
+    @GetMapping("/products/delete/{id}")
+    public String deleteProduct(@PathVariable Long id) {
+        productRepository.deleteById(id);
+        return "redirect:/products"; // Xóa xong quay về trang danh sách
     }
 }

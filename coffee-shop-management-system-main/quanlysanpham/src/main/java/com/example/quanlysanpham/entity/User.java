@@ -1,47 +1,34 @@
 package com.example.quanlysanpham.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "users") // "user" dễ bị trùng keyword ở một số DB
+@Table(name = "users") 
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // username dùng để login -> nên unique
     @Column(nullable = false, unique = true)
     private String username;
 
-    // demo MVP: để String. (thực tế nên hash password)
     @Column(nullable = false)
     private String password;
 
-    // Theo diagram: String role (ADMIN/STAFF)
     @Column(nullable = false)
-    private String role;
+    private String role; // ADMIN hoặc STAFF
 
     @Column(nullable = false)
     private String fullName;
 
-    // 1 user tạo nhiều order (Order.createdBy)
-    @JsonIgnore
-    @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
-    private List<Order> orders = new ArrayList<>();
-
+    // --- ĐÃ XÓA LIST ORDERS ĐỂ TRÁNH LỖI CRASH SERVER ---
+    
     public User() {
     }
 
@@ -93,13 +80,4 @@ public class User {
     public void setFullName(String fullName) {
         this.fullName = fullName;
     }
-
-    public List<Order> getOrders() {
-        return orders;
-    }
-
-    public void setOrders(List<Order> orders) {
-        this.orders = orders;
-    }
-
 }

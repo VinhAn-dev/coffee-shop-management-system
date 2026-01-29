@@ -1,11 +1,12 @@
 package com.example.quanlysanpham.controller;
 
-import com.example.quanlysanpham.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.data.domain.Sort;
+
+import com.example.quanlysanpham.repository.OrderRepository;
 
 @Controller
 public class OrderHistoryController {

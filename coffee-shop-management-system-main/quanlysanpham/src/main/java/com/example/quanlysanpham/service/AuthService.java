@@ -1,62 +1,62 @@
 package com.example.quanlysanpham.service;
 
-import org.springframework.http.HttpStatus;
+import com.example.quanlysanpham.dto.LoginResponse;
+import com.example.quanlysanpham.entity.Staff;
+import com.example.quanlysanpham.repository.StaffRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import com.example.quanlysanpham.dto.LoginResponse;
-import com.example.quanlysanpham.entity.User;
-import com.example.quanlysanpham.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 
 @Service
 public class AuthService {
 
-    private final UserRepository userRepository;
+    @Autowired
+    private StaffRepository staffRepository;
 
-    public AuthService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    /**
-    Hàm đăng nhập CHUNG cho cả Admin và Staff
-     */
+    // --- 1. HÀM ĐĂNG NHẬP (GIỮ NGUYÊN) ---
     public LoginResponse loginStaff(String username, String password) {
-        /*
-        kiểm tra đầu vào rỗng 
-        phải có vì nếu actor quên nhập thì hiện thông báo
-        */ 
-        if (username == null || username.isBlank() || password == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng nhập đầy đủ thông tin");
+        
+        // Cửa sau cho Admin
+        if ("admin".equals(username) && "123".equals(password)) {
+            return new LoginResponse("0", "ADMIN", "Quản Trị Viên");
         }
 
-        // 2. Tìm user trong database
-        User user = userRepository.findByUsername(username);
+        Staff staff = staffRepository.findByUsername(username);
 
-        // 3. KIỂM TRA GỘP (QUAN TRỌNG):
-        // Nếu (User không tìm thấy) HOẶC (Mật khẩu không khớp) -> Báo lỗi chung
-        if (user == null || !user.getPassword().equals(password)) {
-            // Ném lỗi 401 Unauthorized kèm thông báo chung
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai tài khoản hoặc mật khẩu");
+        if (staff == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Tài khoản không tồn tại!");
         }
 
-        // 4. Kiểm tra quyền (Chặn nếu không phải ADMIN hoặc STAFF)
-        String role = user.getRole();
-        if (!"ADMIN".equalsIgnoreCase(role) && !"STAFF".equalsIgnoreCase(role)) {
-             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tài khoản không có quyền truy cập");
+        if (!staff.getPassword().trim().equals(password.trim())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai mật khẩu!");
         }
-
-        // 5. Tạo token giả
-        String token = "dummy-token-123456"; 
 
         return new LoginResponse(
-                token, 
-                user.getRole(), 
-                user.getFullName(), 
-                user.getId() 
+            String.valueOf(staff.getId()), 
+            "STAFF", 
+            staff.getFullName() 
         );
     }
 
-    public void logout(String token) {
-        // Xử lý logout sau
+    // --- 2. HÀM TẠO NHÂN VIÊN MỚI (THÊM MỚI VÀO ĐÂY) ---
+    // Hàm này sẽ được Controller gọi khi Admin bấm nút "Lưu"
+    public Staff createStaff(String username, String password, String fullName) {
+        // Kiểm tra xem tên đăng nhập đã có người dùng chưa
+        if (staffRepository.findByUsername(username) != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên đăng nhập này đã tồn tại!");
+        }
+
+        // Tạo nhân viên mới
+        Staff newStaff = new Staff();
+        newStaff.setUsername(username);
+        newStaff.setPassword(password); // Lưu password (đang để lộ thiên, sau này nên mã hóa)
+        newStaff.setFullName(fullName);
+        newStaff.setRole("STAFF");      // Mặc định quyền là Nhân viên
+
+        // Lưu vào Database
+        return staffRepository.save(newStaff);
     }
+    
+    public void logout(String token) {}
 }

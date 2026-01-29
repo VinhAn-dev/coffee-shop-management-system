@@ -65,7 +65,7 @@
 
             try {
                 // Gọi API Login
-                let response = await fetch('http://localhost:8080/api/auth/staff/login', {
+                let response = await fetch('/api/auth/staff/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     // username lấy giá trị của biến u, password lấy của p
@@ -90,7 +90,7 @@
                         if(data.role === "ADMIN") {
                             window.location.href = "admin-home.html"; // Vào trang Dashboard Admin
                         } else if(data.role == "STAFF") {
-                            window.location.href = "order.html"; // trang bán hàng cho Staff
+                            window.location.href = "/pos"; // trang bán hàng cho Staff
                         }else{
                             alert("Tài khoản này chưa được cấp quyền!");
                         }
