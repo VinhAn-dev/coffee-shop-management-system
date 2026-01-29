@@ -1,58 +1,141 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Danh sách Sản phẩm</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <title>Quản lý Thực đơn</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/product-list.css}">
 </head>
-<body class="container mt-4">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fa-solid fa-list"></i> Quản lý Thực đơn</h2>
-        <a href="/admin-home.html" class="btn btn-secondary">
-            <i class="fa-solid fa-arrow-left"></i> Về trang chủ
-        </a>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-primary mb-4 shadow-sm">
+        <div class="container">
+            <span class="navbar-brand fw-bold"><i class="fa-solid fa-mug-hot me-2"></i> Menu Manager</span>
+            <a href="/admin-home.html" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-arrow-left"></i> Về Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="text-dark"><i class="fa-solid fa-list text-primary"></i> Danh sách đồ uống</h4>
+            
+            <button type="button" class="btn btn-success shadow-sm" onclick="openAddModal()">
+                <i class="fa-solid fa-plus"></i> Thêm món mới
+            </button>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Tên món</th>
+                            <th>Giá tiền</th>
+                            <th>Mô tả</th>
+                            <th class="text-center" style="width: 150px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${products}">
+                            <td class="fw-bold text-dark" th:text="${p.name}"></td>
+                            
+                            <td class="text-success fw-bold" 
+                                th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' VNĐ'"></td>
+                            
+                            <td class="text-muted small" th:text="${p.description}"></td>
+                            
+                            <td class="text-center">
+                                <button class="btn btn-warning btn-sm me-1"
+                                        th:onclick="openEditModal([[${p.id}]], '[[${p.name}]]', [[${p.price}]], '[[${p.description}]]')">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                
+                                <a th:href="@{/products/delete/{id}(id=${p.id})}" class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Xóa món này khỏi thực đơn?')">
+                                    <i class="fa-solid fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div th:if="${products.empty}" class="alert alert-warning text-center mt-3 shadow-sm">
+            Chưa có món nào. Hãy bấm nút "Thêm món mới"!
+        </div>
     </div>
 
-    <a href="/products/new" class="btn btn-success mb-3">
-        <i class="fa-solid fa-plus"></i> Thêm món mới
-    </a>
+    <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalTitle">Thông tin món ăn</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                
+                <div class="modal-body">
+                    <form action="/products/save" method="post">
+                        <input type="hidden" id="productId" name="id">
 
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Tên món</th>
-                <th>Giá</th>
-                <th>Mô tả</th>
-                <th style="width: 150px;">Hành động</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="p : ${products}">
-                <td th:text="${p.name}" class="fw-bold"></td>
-                
-                <td class="text-success fw-bold" 
-                    th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' VNĐ'">
-                </td>
-                
-                <td th:text="${p.description}"></td>
-                
-                <td>
-                    <a th:href="@{/products/edit/{id}(id=${p.id})}" class="btn btn-warning btn-sm">
-                        <i class="fa-solid fa-pen"></i>
-                    </a>
-                    <a th:href="@{/products/delete/{id}(id=${p.id})}" class="btn btn-danger btn-sm"
-                       onclick="return confirm('Bạn có chắc muốn xóa món này không?')">
-                       <i class="fa-solid fa-trash"></i>
-                    </a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    
-    <div th:if="${products.empty}" class="alert alert-warning text-center">
-        Chưa có món nào trong thực đơn. Hãy thêm món mới!
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tên món:</label>
+                            <input type="text" id="productName" name="name" class="form-control" required placeholder="VD: Cà phê đen">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Giá bán (VNĐ):</label>
+                            <input type="number" id="productPrice" name="price" step="0.01" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mô tả:</label>
+                            <textarea id="productDesc" name="description" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success py-2">
+                                <i class="fa-solid fa-save"></i> Lưu thông tin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Khởi tạo đối tượng Modal của Bootstrap
+        let myModal;
+        document.addEventListener("DOMContentLoaded", function() {
+            myModal = new bootstrap.Modal(document.getElementById('productModal'));
+        });
+
+        // Hàm mở Modal để THÊM MỚI (Xóa trắng form)
+        function openAddModal() {
+            document.getElementById('modalTitle').innerText = "Thêm Món Mới";
+            document.getElementById('productId').value = ""; // ID rỗng -> Backend tự hiểu là thêm mới
+            document.getElementById('productName').value = "";
+            document.getElementById('productPrice').value = "";
+            document.getElementById('productDesc').value = "";
+            myModal.show();
+        }
+
+        // Hàm mở Modal để SỬA (Điền dữ liệu cũ vào form)
+        function openEditModal(id, name, price, desc) {
+            document.getElementById('modalTitle').innerText = "Cập Nhật Món Ăn";
+            document.getElementById('productId').value = id; // Có ID -> Backend tự hiểu là Update
+            document.getElementById('productName').value = name;
+            document.getElementById('productPrice').value = price;
+            document.getElementById('productDesc').value = desc;
+            myModal.show();
+        }
+    </script>
 </body>
 </html>

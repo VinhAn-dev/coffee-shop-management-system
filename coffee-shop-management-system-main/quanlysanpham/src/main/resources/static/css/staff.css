@@ -1,0 +1,107 @@
+/* =========================================
+   STAFF MANAGEMENT STYLES
+   ========================================= */
+
+/* 1. Tinh chỉnh Card (Khung chứa) */
+.card {
+    border: none;
+    border-radius: 15px; /* Bo góc tròn hơn chút cho mềm mại */
+    overflow: hidden;    /* Để header không bị lòi ra ngoài góc bo */
+    transition: transform 0.2s;
+}
+
+/* 2. Card Header (Tiêu đề khung) */
+/* Ghi đè màu bg-primary của Bootstrap thành màu Nâu Cà Phê */
+.bg-primary {
+    background-color: #6F4E37 !important; 
+}
+
+.card-header {
+    padding: 15px 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #5D4037;
+}
+
+/* 3. Badge (Số lượng nhân viên) */
+.badge {
+    color: #6F4E37 !important; /* Chữ màu nâu */
+    background-color: #fff !important; /* Nền trắng */
+    font-size: 0.9rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* 4. Form Styling (Ô nhập liệu) */
+.form-label {
+    color: #4e3629; /* Màu nâu đậm cho nhãn */
+    font-size: 0.95rem;
+    margin-bottom: 5px;
+}
+
+.form-control {
+    border: 1px solid #e0e0e0;
+    background-color: #fcfcfc;
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+/* Hiệu ứng khi bấm vào ô nhập */
+.form-control:focus {
+    border-color: #6F4E37;
+    box-shadow: 0 0 0 4px rgba(111, 78, 55, 0.15); /* Viền sáng màu nâu nhạt */
+    background-color: #fff;
+}
+
+/* 5. Nút Bấm (Buttons) */
+.btn-success {
+    background-color: #27ae60;
+    border: none;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
+    transition: all 0.3s;
+}
+
+.btn-success:hover {
+    background-color: #219150;
+    transform: translateY(-2px); /* Nút nổi lên khi di chuột */
+}
+
+/* Nút xóa nhỏ trong bảng */
+.btn-danger.btn-sm {
+    background-color: #fff;
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+    transition: all 0.2s;
+}
+
+.btn-danger.btn-sm:hover {
+    background-color: #e74c3c;
+    color: #fff;
+}
+
+/* 6. Bảng Danh Sách (Table) */
+.table-hover tbody tr:hover {
+    background-color: #fff8f0; /* Màu kem rất nhạt khi hover vào dòng */
+}
+
+.table thead th {
+    background-color: #4e3629 !important; /* Header bảng màu nâu đậm */
+    color: white;
+    border: none;
+    padding: 12px;
+    font-weight: 500;
+}
+
+.table td {
+    padding: 12px;
+    vertical-align: middle;
+    color: #333;
+}
+
+/* Ẩn mật khẩu (dấu sao) */
+.text-muted {
+    font-family: monospace; /* Dùng font máy tính cho dấu sao đều nhau */
+    letter-spacing: 2px;
+}
