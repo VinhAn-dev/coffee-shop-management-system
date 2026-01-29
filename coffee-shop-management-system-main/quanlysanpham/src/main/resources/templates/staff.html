@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>Quản Lý Nhân Viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 </head>
+
 <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark mb-4">
         <div class="container">
             <span class="navbar-brand"><i class="fas fa-users-cog me-2"></i> Quản Lý Nhân Viên</span>
-            <a href="/" class="btn btn-outline-light btn-sm">Về trang chủ</a>
+            <a href="/admin-home.html" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-home"></i> Về trang chủ
+            </a>
         </div>
     </nav>
 
@@ -19,25 +23,25 @@
             <div class="col-md-4">
                 <div class="card p-3 mb-3 shadow-sm">
                     <h5 class="mb-3 text-primary">Thêm Nhân Viên Mới</h5>
-                    
-                    <form th:action="@{/admin/staff/add}" th:object="${staff}" method="POST">
-                        
+
+                    <form action="/admin/staff/add" method="POST">
+
                         <div class="mb-3">
                             <label class="form-label">Họ tên:</label>
-                            <input type="text" th:field="*{fullName}" class="form-control" placeholder="Nhập họ tên" required>
+                            <input type="text" name="fullName" class="form-control" placeholder="Nhập họ tên" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Tên đăng nhập:</label>
-                            <input type="text" th:field="*{username}" class="form-control" placeholder="Username" required>
+                            <input type="text" name="username" class="form-control" placeholder="Username" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Mật khẩu:</label>
-                            <input type="text" th:field="*{password}" class="form-control" placeholder="Mật khẩu" required>
+                            <input type="text" name="password" class="form-control" placeholder="Mật khẩu" required>
                         </div>
 
-                        <button class="btn btn-primary w-100">Lưu lại</button>
+                        <button type="submit" class="btn btn-primary w-100">Lưu lại</button>
                     </form>
                 </div>
             </div>
@@ -45,6 +49,9 @@
             <div class="col-md-8">
                 <div class="card p-3 shadow-sm">
                     <h5 class="mb-3 text-success">Danh sách nhân viên</h5>
+
+                    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
                     <table class="table table-bordered table-hover">
                         <thead class="table-light">
                             <tr>
@@ -62,10 +69,9 @@
                                 <td th:text="${s.username}"></td>
                                 <td th:text="${s.password}"></td>
                                 <td>
-                                    <a th:href="@{/admin/staff/delete/{id}(id=${s.id})}" 
-                                       class="btn btn-danger btn-sm"
-                                       onclick="return confirm('Bạn có chắc muốn xóa nhân viên này?');">
-                                       <i class="fas fa-trash"></i> Xóa
+                                    <a th:href="@{/admin/staff/delete/{id}(id=${s.id})}" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Bạn có chắc muốn xóa nhân viên này?');">
+                                        <i class="fas fa-trash"></i> Xóa
                                     </a>
                                 </td>
                             </tr>
@@ -76,4 +82,5 @@
         </div>
     </div>
 </body>
+
 </html>

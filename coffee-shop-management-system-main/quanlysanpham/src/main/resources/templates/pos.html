@@ -106,7 +106,7 @@
         <div class="fw-bold fs-5"><i class="fa-solid fa-mug-hot me-2"></i> COFFEE HUB POS</div>
         <div>
             <span class="me-3"><i class="fa-solid fa-user-tie me-1"></i> Chào, Nhân Viên</span>
-            <button onclick="logout()" class="btn btn-sm btn-outline-light"><i class="fa-solid fa-right-from-bracket"></i> Thoát</button>
+            <button onclick="logout()" class="btn btn-sm btn-outline-light"><i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất</button>
         </div>
     </nav>
 
@@ -211,7 +211,11 @@
 
         // Xóa món
         function removeItem(index) {
-            cart.splice(index, 1);
+            if(cart[index].quantity > 1){
+                cart[index].quantity--;
+            }else{
+                cart.splice(index,1);
+            }
             renderCart();
         }
 
