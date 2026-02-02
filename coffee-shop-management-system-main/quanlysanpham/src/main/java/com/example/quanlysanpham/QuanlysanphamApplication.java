@@ -21,14 +21,12 @@ public class QuanlysanphamApplication {
     @EventListener(ApplicationReadyEvent.class)
     public void printLinksAndOpenBrowser() {
         String homeUrl = "http://localhost:8080/";
-        String adminUrl = "http://localhost:8080/admin/staff";
         String dbUrl = "http://localhost:8080/h2-console";
 
         System.out.println("\n----------------------------------------------------------");
         System.out.println("🚀  DỰ ÁN ĐÃ KHỞI ĐỘNG THÀNH CÔNG!  🚀");
         System.out.println("----------------------------------------------------------");
         System.out.println("🏠  Trang chủ:      " + homeUrl);
-        System.out.println("👨‍💼  Quản lý Staff:  " + adminUrl);
         System.out.println("🗄️   Database (H2):  " + dbUrl);
         System.out.println("----------------------------------------------------------\n");
 

@@ -1,18 +1,22 @@
 package com.example.quanlysanpham.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute; // Import Product
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.example.quanlysanpham.entity.Order;
 import com.example.quanlysanpham.entity.Product;
 import com.example.quanlysanpham.repository.OrderRepository;
 import com.example.quanlysanpham.repository.ProductRepository;
-import com.example.quanlysanpham.repository.StaffRepository;
+import com.example.quanlysanpham.repository.StaffRepository; // Import Product
 import com.example.quanlysanpham.service.AuthService;
 
 @Controller
@@ -80,10 +84,16 @@ public class HomeController {
     }
     // ---------------------------------------------
 
-    // --- 3. LỊCH SỬ ĐƠN HÀNG ---
+    // --- 3. LỊCH SỬ ĐƠN HÀNG (CÓ PHÂN TRANG) ---
     @GetMapping("/admin/history")
-    public String showHistoryPage(Model model) {
-        model.addAttribute("orders", orderRepo.findAll());
+    public String showHistoryPage(Model model, @RequestParam(defaultValue = "0") int page) {
+        // Lấy trang thứ 'page', mỗi trang 10 dòng, sắp xếp ID giảm dần (đơn mới nhất lên đầu)
+        Page<Order> orderPage = orderRepo.findAll(PageRequest.of(page, 10, Sort.by("id").descending()));
+        
+        model.addAttribute("orders", orderPage);      // Danh sách đơn của trang hiện tại
+        model.addAttribute("currentPage", page);      // Trang hiện tại (để tính nút Next/Prev)
+        model.addAttribute("totalPages", orderPage.getTotalPages()); // Tổng số trang
+        
         return "order-history";
     }
 
