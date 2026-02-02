@@ -1,19 +1,23 @@
 package com.example.quanlysanpham.controller;
 
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
+
 import com.example.quanlysanpham.dto.CartItem;
 import com.example.quanlysanpham.entity.Order;
 import com.example.quanlysanpham.entity.OrderItem;
 import com.example.quanlysanpham.entity.Product;
 import com.example.quanlysanpham.repository.OrderRepository;
 import com.example.quanlysanpham.repository.ProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 @Controller
 public class POSController {

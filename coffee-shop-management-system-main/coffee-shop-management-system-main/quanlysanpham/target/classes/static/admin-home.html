@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ thống Quản lý - Coffee Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #6F4E37; --secondary: #A67B5B; --accent: #ECB176;
+            --bg: #fdfaf7; --white: #ffffff; --text: #3d2b1f;
+        }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg); margin: 0; color: var(--text); }
+        
+        /* Navbar Header */
+        .navbar { 
+            background: var(--primary); color: white; padding: 1rem 2rem; 
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
+        
+        /* Container chính */
+        .container { max-width: 1100px; margin: 50px auto; padding: 20px; text-align: center; }
+        
+        /* Lưới hiển thị các thẻ (Grid System) */
+        .dashboard-menu { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Tự động chia cột đều nhau */
+            gap: 30px; /* Khoảng cách giữa các thẻ */
+            margin-top: 40px; 
+        }
+        
+        /* Style cho từng thẻ chức năng */
+        .card { 
+            background: var(--white); padding: 40px; border-radius: 20px; 
+            text-decoration: none; color: var(--text); display: block;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: 0.3s; border: 1px solid #eee;
+        }
+        
+        /* Hiệu ứng khi di chuột vào */
+        .card:hover { 
+            transform: translateY(-10px); 
+            border-color: var(--accent); 
+            box-shadow: 0 15px 30px rgba(111,78,55,0.1); 
+        }
+        
+        .card i { font-size: 50px; color: var(--secondary); margin-bottom: 20px; }
+        .card h3 { margin: 10px 0; font-weight: 600; font-size: 1.5rem; }
+        .card p { color: #666; font-size: 0.9rem; }
+        
+        /* Nút Đăng xuất */
+        .btn-logout { 
+            background: #e74c3c; color: white; border: none; 
+            padding: 10px 25px; border-radius: 8px; cursor: pointer; 
+            font-weight: bold; transition: 0.2s;
+        }
+        .btn-logout:hover { background: #c0392b; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <h2 style="margin:0"><i class="fa-solid fa-mug-hot"></i> Coffee Hub Admin</h2>
+        <button onclick="logout()" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+    </div>
+
+    <div class="container">
+        <h1>Bảng Điều Khiển Quản Trị</h1>
+        <p>Chào mừng quay trở lại, vui lòng chọn một tác vụ để tiếp tục</p>
+        
+        <div class="dashboard-menu">
+            
+            <a href="/products" class="card">
+                <i class="fa-solid fa-utensils"></i>
+                <h3>Quản lý Thực Đơn</h3>
+                <p>Cập nhật danh sách đồ uống</p>
+            </a>
+            
+            <a href="/admin/history" class="card">
+                <i class="fa-solid fa-receipt"></i>
+                <h3>Lịch sử Đơn Hàng</h3>
+                <p>Xem doanh thu và hóa đơn</p>
+            </a>
+
+            <a href="/admin/staff" class="card">
+                <i class="fa-solid fa-users-gear"></i>
+                <h3>Quản lý Nhân Viên</h3>
+                <p>Thêm, xóa và quản lý tài khoản</p>
+            </a>
+
+        </div>
+    </div>
+
+    <script>
+        function logout() { 
+            // 1. Xóa thông tin đăng nhập trong bộ nhớ trình duyệt
+            localStorage.removeItem("user"); 
+            
+            // 2. Thông báo và chuyển về trang đăng nhập (index.html)
+            if(confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+                window.location.href = "index.html"; 
+            }
+        }
+
+        // Kiểm tra bảo mật: Nếu chưa đăng nhập thì đá về trang login ngay
+        // (Phòng trường hợp gõ link trực tiếp mà không đăng nhập)
+        window.onload = function() {
+            const user = localStorage.getItem("user");
+            if (!user) {
+                // Nếu chưa có user trong localStorage -> Về trang login
+                // window.location.href = "index.html"; 
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,7 +1,13 @@
-package com.example.quanlysanpham.entity; // QUAN TRỌNG: Phải đúng dòng này
+package com.example.quanlysanpham.entity;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "products")
@@ -13,15 +19,19 @@ public class Product {
     private String name;
     private String description;
     private BigDecimal price;
-    private String image; 
+    private String image;
+
+    @Column(name = "is_available", nullable = false)
+    private Boolean isAvailable = true; 
 
     public Product() {}
 
-    public Product(String name, String description, BigDecimal price, String image) {
+    public Product(String name, String description, BigDecimal price, String image, Boolean isAvailable) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.image = image;
+        this.isAvailable = isAvailable;
     }
 
     // Getters and Setters
@@ -35,4 +45,7 @@ public class Product {
     public void setPrice(BigDecimal price) { this.price = price; }
     public String getImage() { return image; }
     public void setImage(String image) { this.image = image; }
+
+    public Boolean getIsAvailable() { return isAvailable; }
+    public void setIsAvailable(Boolean isAvailable) { this.isAvailable = isAvailable; }
 }

@@ -1,19 +1,25 @@
 package com.example.quanlysanpham.controller;
 
+import java.time.LocalDate;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute; // Import Product
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.example.quanlysanpham.entity.Order;
 import com.example.quanlysanpham.entity.Product;
-import com.example.quanlysanpham.repository.OrderRepository;
 import com.example.quanlysanpham.repository.ProductRepository;
 import com.example.quanlysanpham.repository.StaffRepository;
 import com.example.quanlysanpham.service.AuthService;
+import com.example.quanlysanpham.service.OrderService;
 
 @Controller
 public class HomeController {
@@ -26,9 +32,9 @@ public class HomeController {
     
     @Autowired
     private ProductRepository productRepo;
-    
+        
     @Autowired
-    private OrderRepository orderRepo;
+    private OrderService orderService; // Chúng ta dùng Service để xử lý logic
 
     // --- 1. TRANG CHỦ & ĐIỀU HƯỚNG ---
     @GetMapping("/")
@@ -43,47 +49,60 @@ public class HomeController {
         return "product-list"; 
     }
 
-    // --- 👇 PHẦN MỚI THÊM: CRUD SẢN PHẨM 👇 ---
-
-    // Mở form thêm mới
+    // --- CRUD SẢN PHẨM ---
     @GetMapping("/products/new")
     public String showNewProductForm(Model model) {
         model.addAttribute("product", new Product());
         model.addAttribute("pageTitle", "Thêm Món Mới");
-        return "product-form"; // Cần tạo file product-form.html
+        return "product-form";
     }
 
-    // Lưu sản phẩm (Dùng cho cả Thêm mới và Sửa)
     @PostMapping("/products/save")
     public String saveProduct(@ModelAttribute("product") Product product) {
         productRepo.save(product);
         return "redirect:/products";
     }
 
-    // Mở form sửa
     @GetMapping("/products/edit/{id}")
     public String showEditProductForm(@PathVariable("id") Long id, Model model) {
         Product product = productRepo.findById(id).orElse(null);
         if (product != null) {
             model.addAttribute("product", product);
             model.addAttribute("pageTitle", "Sửa Món Ăn (ID: " + id + ")");
-            return "product-form"; // Tái sử dụng form
+            return "product-form";
         }
         return "redirect:/products";
     }
 
-    // Xóa sản phẩm
     @GetMapping("/products/delete/{id}")
     public String deleteProduct(@PathVariable("id") Long id) {
         productRepo.deleteById(id);
         return "redirect:/products";
     }
-    // ---------------------------------------------
 
-    // --- 3. LỊCH SỬ ĐƠN HÀNG ---
+    // --- 3. LỊCH SỬ ĐƠN HÀNG VỚI BỘ LỌC & PHÂN TRANG ---
     @GetMapping("/admin/history")
-    public String showHistoryPage(Model model) {
-        model.addAttribute("orders", orderRepo.findAll());
+    public String showHistoryPage(
+            @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(name = "staffName", defaultValue = "") String staffName,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            Model model) {
+        
+        // Mặc định hiển thị 10 đơn hàng mỗi trang để tối ưu hiệu năng
+        int pageSize = 10; 
+        
+        // Gọi xuống OrderService để lấy dữ liệu đã được lọc và cắt nhỏ (Pagination)
+        Page<Order> orderPage = orderService.getOrdersWithFilter(date, staffName, PageRequest.of(page, pageSize));
+        
+        // Đẩy dữ liệu ra view (order-history.html)
+        model.addAttribute("orders", orderPage.getContent());     // Danh sách đơn của trang hiện tại
+        model.addAttribute("currentPage", page);                  // Trang hiện tại (0, 1, 2...)
+        model.addAttribute("totalPages", orderPage.getTotalPages()); // Tổng số trang
+        
+        // Trả lại giá trị lọc để giữ nguyên trên ô input sau khi bấm tìm kiếm
+        model.addAttribute("selectedDate", date);
+        model.addAttribute("staffName", staffName);
+        
         return "order-history";
     }
 

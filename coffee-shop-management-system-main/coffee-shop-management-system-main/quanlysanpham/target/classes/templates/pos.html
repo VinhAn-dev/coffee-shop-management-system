@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Bán Hàng - Coffee Hub</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; height: 100vh; overflow: hidden; }
+        .product-card { cursor: pointer; transition: 0.2s; border: 1px solid #ddd; }
+        .product-card:hover { transform: scale(1.02); border-color: #6F4E37; background: #fff8f0; }
+        .cart-section { background: white; height: 100vh; border-left: 2px solid #ddd; display: flex; flex-direction: column; }
+        .cart-items { flex-grow: 1; overflow-y: auto; padding: 10px; }
+        .scrollable-menu { height: 100vh; overflow-y: auto; padding-bottom: 50px; }
+    </style>
+</head>
+<body class="row m-0">
+
+    <div class="col-md-8 p-4 scrollable-menu">
+        <h3 class="mb-4 text-primary"><i class="fa-solid fa-mug-hot"></i> Chọn món</h3>
+        
+        <div class="row g-3">
+            <div class="col-md-3 col-6" th:each="p : ${products}">
+                <div class="card product-card h-100 p-2 text-center" 
+                     th:onclick="addToCart([[${p.id}]], [[${p.name}]], [[${p.price}]])">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold" th:text="${p.name}"></h5>
+                        <p class="card-text text-success fw-bold" 
+                           th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 cart-section p-3 shadow">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4><i class="fa-solid fa-cart-shopping"></i> Giỏ hàng</h4>
+            <a href="javascript:void(0)" onclick="logout()" class="btn btn-outline-danger btn-sm">Thoát</a>
+        </div>
+
+        <div class="cart-items" id="cartList">
+            <p class="text-center text-muted mt-5">Chưa có món nào...</p>
+        </div>
+
+        <div class="border-top pt-3 mt-2">
+            <div class="d-flex justify-content-between fs-4 fw-bold mb-3">
+                <span>Tổng tiền:</span>
+                <span id="totalPrice" class="text-danger">0 đ</span>
+            </div>
+            <button onclick="checkout()" class="btn btn-success w-100 py-3 fs-5 fw-bold">
+                <i class="fa-solid fa-money-bill-wave"></i> THANH TOÁN / XUẤT BILL
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let cart = []; // Mảng chứa giỏ hàng
+
+        // 1. Hàm thêm món vào giỏ
+        function addToCart(id, name, price) {
+            // Kiểm tra xem món đã có trong giỏ chưa
+            let existingItem = cart.find(item => item.id === id);
+            
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({ id: id, name: name, price: price, quantity: 1 });
+            }
+            renderCart();
+        }
+
+        // 2. Hàm vẽ lại giỏ hàng ra màn hình
+        function renderCart() {
+            let cartHtml = document.getElementById("cartList");
+            let totalHtml = document.getElementById("totalPrice");
+            
+            if (cart.length === 0) {
+                cartHtml.innerHTML = '<p class="text-center text-muted mt-5">Chưa có món nào...</p>';
+                totalHtml.innerText = "0 đ";
+                return;
+            }
+
+            let html = "";
+            let total = 0;
+
+            cart.forEach((item, index) => {
+                let lineTotal = item.price * item.quantity;
+                total += lineTotal;
+                
+                html += `
+                <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                    <div>
+                        <div class="fw-bold">${item.name}</div>
+                        <div class="text-muted small">${item.price.toLocaleString()} x ${item.quantity}</div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="fw-bold me-3">${lineTotal.toLocaleString()} đ</span>
+                        <button onclick="removeItem(${index})" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>`;
+            });
+
+            cartHtml.innerHTML = html;
+            totalHtml.innerText = total.toLocaleString() + " VNĐ";
+        }
+
+        // 3. Xóa món
+        function removeItem(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        // 4. Thanh toán (Gửi API)
+        async function checkout() {
+            if (cart.length === 0) {
+                alert("Giỏ hàng đang trống!");
+                return;
+            }
+
+            if (!confirm("Xác nhận thanh toán đơn này?")) return;
+
+            // Chuẩn bị dữ liệu để gửi (chỉ cần id và số lượng)
+            let dataToSend = cart.map(item => ({
+                productId: item.id,
+                quantity: item.quantity
+            }));
+
+            try {
+                let response = await fetch('/api/orders/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataToSend)
+                });
+
+                if (response.ok) {
+                    alert("✅ Xuất bill thành công!");
+                    cart = []; // Xóa giỏ
+                    renderCart();
+                } else {
+                    alert("❌ Lỗi thanh toán!");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Không kết nối được server");
+            }
+        }
+        
+        function logout() {
+             localStorage.removeItem("user");
+             window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
