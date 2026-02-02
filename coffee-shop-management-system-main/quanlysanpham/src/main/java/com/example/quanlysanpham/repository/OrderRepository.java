@@ -14,9 +14,10 @@ import com.example.quanlysanpham.entity.Order;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    @Query("SELECT o FROM Order o LEFT JOIN o.createdBy u WHERE " +
+    // Đã sửa: dùng "o.staff" khớp với biến trong Order.java của bạn
+    @Query("SELECT o FROM Order o LEFT JOIN o.staff s WHERE " +
            "(o.orderDate BETWEEN :start AND :end) " +
-           "AND (:staffName IS NULL OR LOWER(u.fullName) LIKE LOWER(:staffName))")
+           "AND (:staffName IS NULL OR LOWER(s.fullName) LIKE LOWER(:staffName))")
     Page<Order> findByOrderDateBetweenAndUser_FullNameContainingIgnoreCase(
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end,
