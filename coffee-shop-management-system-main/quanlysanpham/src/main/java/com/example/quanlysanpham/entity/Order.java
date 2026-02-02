@@ -1,10 +1,19 @@
 package com.example.quanlysanpham.entity;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "orders")
@@ -18,11 +27,11 @@ public class Order {
     
     private BigDecimal totalAmount;
 
-    // --- 🔥 THÊM CÁI NÀY ĐỂ HTML KHÔNG BỊ LỖI ---
+    // --- THÊM CÁI NÀY ĐỂ HTML KHÔNG BỊ LỖI ---
     // Liên kết với bảng Staff để biết ai bán
     @ManyToOne 
     @JoinColumn(name = "staff_id")
-    private Staff createdBy; 
+    private Staff staff; 
     // ---------------------------------------------
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
@@ -43,8 +52,8 @@ public class Order {
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
 
-    public Staff getCreatedBy() { return createdBy; }
-    public void setCreatedBy(Staff createdBy) { this.createdBy = createdBy; }
+    public Staff getStaff() { return staff; }
+    public void setStaff(Staff staff) { this.staff = staff; }
 
     public List<OrderItem> getItems() { return items; }
     public void setItems(List<OrderItem> items) { this.items = items; }

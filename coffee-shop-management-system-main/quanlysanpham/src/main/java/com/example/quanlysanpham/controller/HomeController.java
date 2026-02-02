@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.example.quanlysanpham.entity.Order;
 import com.example.quanlysanpham.entity.Product;
 import com.example.quanlysanpham.repository.ProductRepository;
-import com.example.quanlysanpham.repository.StaffRepository;
+import com.example.quanlysanpham.repository.StaffRepository; // Import Product
 import com.example.quanlysanpham.service.AuthService;
 import com.example.quanlysanpham.service.OrderService;
 
