@@ -27,6 +27,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Mã Đơn</th>
+                            <th>Nhân viên</th>
                             <th>Ngày Tạo</th>
                             <th>Chi tiết món</th>
                             <th>Tổng Tiền</th>
@@ -35,6 +36,10 @@
                     <tbody>
                         <tr th:each="order : ${orders.content}">
                             <td class="fw-bold" th:text="'#' + ${order.id}"></td>
+
+                            <td>
+                                <span class="badge bg-info text-dark" th:text="${order.staff != null ? order.staff.fullName : 'Admin'}"></span>>
+                            </td>
 
                             <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"></td>
 
