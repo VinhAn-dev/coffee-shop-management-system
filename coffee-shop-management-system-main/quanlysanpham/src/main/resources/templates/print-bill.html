@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hóa đơn</title>
+    <style>
+        /* Khổ giấy in nhiệt 80mm */
+        body {
+            font-family: monospace;
+            width: 80mm; 
+            margin: 0 auto;
+            padding: 5px;
+            color: black;
+            background: white;
+        }
+        h2, p { margin: 2px 0; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { border-bottom: 1px dashed black; text-align: left; font-size: 12px;}
+        td { font-size: 12px; padding: 4px 0;}
+        .text-right { text-align: right; }
+        .total { border-top: 1px dashed black; font-weight: bold; margin-top: 10px; padding-top: 5px; text-align: right;}
+    </style>
+</head>
+<body>
+    <h2>COFFEE HUB</h2>
+    <p>ĐC: 123 Đường Láng</p>
+    <p>--------------------------</p>
+    
+    <p>HÓA ĐƠN THANH TOÁN</p>
+    <p th:text="'Số: #' + ${order.id}"></p>
+    <p th:text="'Ngày: ' + ${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"></p>
+    <p th:text="'Thu ngân: ' + (${order.staff != null ? order.staff.fullName : 'Admin'})"></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Tên món</th>
+                <th>SL</th>
+                <th class="text-right">Tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="item : ${order.items}">
+                <td th:text="${item.product.name}">Cafe</td>
+                <td th:text="${item.quantity}">1</td>
+                <td class="text-right" th:text="${#numbers.formatDecimal(item.priceAtOrder * item.quantity, 0, 'COMMA', 0, 'POINT')}">20.000</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="total">
+        TỔNG CỘNG: <span th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')}"></span> đ
+    </div>
+
+    <p style="margin-top: 20px; font-style: italic;">Cảm ơn quý khách!</p>
+
+    <script>
+        window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

@@ -22,7 +22,7 @@ public class OrderService {
 
     // Lấy danh sách tất cả đơn hàng (Sắp xếp mới nhất lên đầu)
     public List<Order> getAllOrders() {
-        return orderRepo.findAll(Sort.by(Sort.Direction.DESC, "orderDate"));
+        return orderRepo.findAll(Sort.by(Sort.Direction.DESC, "id"));
     }
 
     // Lưu đơn hàng

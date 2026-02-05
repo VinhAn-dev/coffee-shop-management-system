@@ -61,7 +61,7 @@
     <script>
         let cart = []; 
 
-        // Thêm món
+        // --- 1. CÁC HÀM XỬ LÝ GIỎ HÀNG (GIỮ NGUYÊN) ---
         function addToCart(id, name, price) {
             let existingItem = cart.find(item => item.id === id);
             if (existingItem) {
@@ -72,7 +72,6 @@
             renderCart();
         }
 
-        // Vẽ lại giỏ hàng (Update giao diện giống hình mẫu)
         function renderCart() {
             let cartHtml = document.getElementById("cartList");
             let totalHtml = document.getElementById("totalPrice");
@@ -94,7 +93,6 @@
                 let lineTotal = item.price * item.quantity;
                 total += lineTotal;
                 
-                // Giao diện từng dòng món ăn
                 html += `
                 <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-3">
                     <div style="flex-grow: 1;">
@@ -114,8 +112,7 @@
             cartHtml.innerHTML = html;
             totalHtml.innerText = total.toLocaleString();
         }
-
-        // Xóa món
+        // xóa từng đơn vị 1 nếu ==1 thì xóa món khỏi bill
         function removeItem(index) {
             if(cart[index].quantity > 1){
                 cart[index].quantity--;
@@ -125,7 +122,7 @@
             renderCart();
         }
 
-        // Thanh toán (Kết nối API backend đã sửa)
+        // --- 2. HÀM THANH TOÁN (ĐÃ SỬA LẠI ĐỂ IN BILL) ---
         async function checkout() {
             if (cart.length === 0) {
                 alert("Giỏ hàng đang trống!");
@@ -134,9 +131,8 @@
 
             if (!confirm("Xác nhận thanh toán đơn này?")) return;
 
-            // Mapping dữ liệu chuẩn cho Backend
             let dataToSend = cart.map(item => ({
-                productId: item.id, // Quan trọng: Phải là productId
+                productId: item.id,
                 quantity: item.quantity
             }));
 
@@ -147,22 +143,38 @@
                     body: JSON.stringify(dataToSend)
                 });
 
-                if (response.ok) {
-                    alert("✅ Xuất bill thành công!");
+                // QUAN TRỌNG: Đọc dữ liệu JSON trả về từ Controller
+                let data = await response.json();
+
+                if (data.status === 'success') {
+                    // 1. Thông báo thành công
+                    alert(data.message); // Có thể bỏ dòng này nếu muốn in luôn cho nhanh
+                    console.log("Server trả về ID: " + data.orderId);
+                    // 2. LOGIC IN BILL (MỚI THÊM)
+                    // Lấy ID đơn hàng server trả về để tạo link
+                    let printUrl = '/order/print/' + data.orderId;
+                    
+                    // Mở cửa sổ in kích thước nhỏ (Popup)
+                    window.open(printUrl, '_blank', 'width=480,height=700');
+
+                    // 3. Dọn dẹp giỏ hàng
                     cart = []; 
                     renderCart();
+                    
+                    // Reload trang để cập nhật mọi thứ mới tinh (Optional)
+                    location.reload(); 
                 } else {
-                    alert("❌ Lỗi thanh toán!");
+                    alert(" Lỗi: " + data.message);
                 }
+
             } catch (e) {
                 console.error(e);
-                alert("Không kết nối được server");
+                alert("Lỗi: Không kết nối được server");
             }
         }
         
         function logout() {
-             // Logic logout đơn giản (về trang chủ)
-             window.location.href = "/";
+            window.location.href = "/";
         }
     </script>
 </body>

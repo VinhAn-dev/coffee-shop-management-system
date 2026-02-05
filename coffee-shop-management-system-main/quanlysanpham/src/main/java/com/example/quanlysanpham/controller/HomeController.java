@@ -109,7 +109,7 @@ public class HomeController {
     // --- 4. QUẢN LÝ NHÂN VIÊN ---
     @GetMapping("/admin/staff")
     public String showStaffManagement(Model model) {
-        model.addAttribute("staffList", staffRepository.findAll());
+        model.addAttribute("staffList", staffRepository.findByRole("STAFF"));
         return "staff"; 
     }
 

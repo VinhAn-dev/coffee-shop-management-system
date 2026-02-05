@@ -1,7 +1,7 @@
 package com.example.quanlysanpham.service;
 
 import com.example.quanlysanpham.dto.LoginResponse;
-import com.example.quanlysanpham.entity.Staff;
+import com.example.quanlysanpham.entity.User;
 import com.example.quanlysanpham.repository.StaffRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ public class AuthService {
             return new LoginResponse("0", "ADMIN", "Quản Trị Viên");
         }
 
-        Staff staff = staffRepository.findByUsername(username);
+        User staff = staffRepository.findByUsername(username);
 
         if (staff == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Tài khoản không tồn tại!");
@@ -41,14 +41,14 @@ public class AuthService {
 
     // --- 2. HÀM TẠO NHÂN VIÊN MỚI (THÊM MỚI VÀO ĐÂY) ---
     // Hàm này sẽ được Controller gọi khi Admin bấm nút "Lưu"
-    public Staff createStaff(String username, String password, String fullName) {
+    public User createStaff(String username, String password, String fullName) {
         // Kiểm tra xem tên đăng nhập đã có người dùng chưa
         if (staffRepository.findByUsername(username) != null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên đăng nhập này đã tồn tại!");
         }
 
         // Tạo nhân viên mới
-        Staff newStaff = new Staff();
+        User newStaff = new User();
         newStaff.setUsername(username);
         newStaff.setPassword(password); // Lưu password (đang để lộ thiên, sau này nên mã hóa)
         newStaff.setFullName(fullName);

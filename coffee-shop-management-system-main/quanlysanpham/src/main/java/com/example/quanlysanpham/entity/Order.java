@@ -30,8 +30,8 @@ public class Order {
     // --- THÊM CÁI NÀY ĐỂ HTML KHÔNG BỊ LỖI ---
     // Liên kết với bảng Staff để biết ai bán
     @ManyToOne 
-    @JoinColumn(name = "staff_id")
-    private Staff staff; 
+    @JoinColumn(name = "user_id")
+    private User staff; 
     // ---------------------------------------------
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
@@ -52,8 +52,8 @@ public class Order {
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
 
-    public Staff getStaff() { return staff; }
-    public void setStaff(Staff staff) { this.staff = staff; }
+    public User getStaff() { return staff; }
+    public void setStaff(User staff) { this.staff = staff; }
 
     public List<OrderItem> getItems() { return items; }
     public void setItems(List<OrderItem> items) { this.items = items; }

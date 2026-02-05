@@ -2,7 +2,7 @@ package com.example.quanlysanpham.controller;
 
 import com.example.quanlysanpham.dto.LoginRequest;
 import com.example.quanlysanpham.dto.LoginResponse;
-import com.example.quanlysanpham.entity.Staff; // Import Staff
+import com.example.quanlysanpham.entity.User;
 import com.example.quanlysanpham.repository.StaffRepository; // Import Repository
 import com.example.quanlysanpham.service.AuthService;
 
@@ -32,7 +32,7 @@ public class AuthController {
 
         // 👇 4. QUAN TRỌNG: Lưu nhân viên vào Session
         // (Để POSController bên kia có thể móc ra dùng)
-        Staff staff = staffRepository.findByUsername(req.getUsername());
+        User staff = staffRepository.findByUsername(req.getUsername());
         
         if (staff != null) {
             session.setAttribute("loggedInUser", staff); // Key "loggedInUser" phải khớp với bên POS
